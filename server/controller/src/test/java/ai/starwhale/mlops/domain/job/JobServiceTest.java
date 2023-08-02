@@ -78,7 +78,7 @@ import ai.starwhale.mlops.domain.user.bo.User;
 import ai.starwhale.mlops.exception.SwValidationException;
 import ai.starwhale.mlops.exception.api.StarwhaleApiException;
 import ai.starwhale.mlops.resulting.ResultQuerier;
-import ai.starwhale.mlops.schedule.SwTaskScheduler;
+import ai.starwhale.mlops.schedule.TaskScheduler;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -108,7 +108,7 @@ public class JobServiceTest {
     private TrashService trashService;
     private SystemSettingService systemSettingService;
     private JobSpecParser jobSpecParser;
-    private SwTaskScheduler taskScheduler;
+    private TaskScheduler taskScheduler;
 
     @BeforeEach
     public void setUp() {
@@ -138,7 +138,7 @@ public class JobServiceTest {
         trashService = mock(TrashService.class);
         systemSettingService = mock(SystemSettingService.class);
         jobSpecParser = new JobSpecParser();
-        taskScheduler = mock(SwTaskScheduler.class);
+        taskScheduler = mock(TaskScheduler.class);
 
         service = new JobService(
                 taskMapper, jobConverter, jobBoConverter, runtimeService, jobSpliterator,

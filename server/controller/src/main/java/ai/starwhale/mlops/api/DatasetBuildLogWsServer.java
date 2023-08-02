@@ -17,9 +17,10 @@
 package ai.starwhale.mlops.api;
 
 import ai.starwhale.mlops.common.IdConverter;
-import ai.starwhale.mlops.schedule.k8s.log.CancellableJobLogCollector;
-import ai.starwhale.mlops.schedule.k8s.log.CancellableJobLogK8sCollectorFactory;
-import io.kubernetes.client.openapi.ApiException;
+import ai.starwhale.mlops.domain.task.bo.Task;
+import ai.starwhale.mlops.exception.StarwhaleException;
+import ai.starwhale.mlops.schedule.log.TaskLogCollector;
+import ai.starwhale.mlops.schedule.log.TaskLogStreamingCollector;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,7 +44,7 @@ public class DatasetBuildLogWsServer {
 
     private static IdConverter idConvertor;
 
-    private static CancellableJobLogK8sCollectorFactory logCollectorFactory;
+    final private TaskLogCollector taskLogCollector;
 
     private Session session;
 
@@ -51,17 +52,16 @@ public class DatasetBuildLogWsServer {
 
     private Long id;
 
-    private CancellableJobLogCollector logCollector;
+    private TaskLogStreamingCollector logCollector;
+
+    public DatasetBuildLogWsServer(TaskLogCollector taskLogCollector) {
+        this.taskLogCollector = taskLogCollector;
+    }
 
 
     @Autowired
     public void setIdConvertor(IdConverter idConvertor) {
         DatasetBuildLogWsServer.idConvertor = idConvertor;
-    }
-
-    @Autowired
-    public void setLogCollectorFactory(CancellableJobLogK8sCollectorFactory factory) {
-        DatasetBuildLogWsServer.logCollectorFactory = factory;
     }
 
     @OnOpen
@@ -70,8 +70,8 @@ public class DatasetBuildLogWsServer {
         this.readerId = session.getId();
         this.id = idConvertor.revert(id);
         try {
-            logCollector = logCollectorFactory.make(String.format("%s-%s", name, id));
-        } catch (IOException | ApiException e) {
+            logCollector = taskLogCollector.streaming(Task.builder().id(Long.valueOf(id)).build());
+        } catch (StarwhaleException e) {
             log.error("make k8s log collector failed", e);
         }
         log.info("Build log ws opened. reader={}, task={}", readerId, id);

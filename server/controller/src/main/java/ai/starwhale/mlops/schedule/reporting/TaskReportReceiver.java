@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.reporting;
+package ai.starwhale.mlops.schedule.reporting;
 
 import java.util.List;
 
 /**
  * receive task status from agents
  */
-public interface TaskModifyReceiver {
+public interface TaskReportReceiver {
 
     /**
      * process the report from Agent

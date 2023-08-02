@@ -14,36 +14,15 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.schedule.k8s;
+package ai.starwhale.mlops.schedule.impl.k8s;
 
-import io.kubernetes.client.openapi.models.V1EnvVar;
-import io.kubernetes.client.openapi.models.V1Probe;
-import java.util.List;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.time.OffsetDateTime;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class ContainerOverwriteSpec {
-
-    String name;
-
-    String image;
-
-    List<String> cmds;
-
-    ResourceOverwriteSpec resourceOverwriteSpec;
-
-    List<V1EnvVar> envs;
-
-    V1Probe readinessProbe;
-
-    public ContainerOverwriteSpec(String name) {
-        this.name = name;
+public class Util {
+    public static Long k8sTimeToMs(OffsetDateTime time) {
+        if (time == null) {
+            return null;
+        }
+        return time.toInstant().toEpochMilli();
     }
-
 }

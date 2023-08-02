@@ -36,7 +36,7 @@ import ai.starwhale.mlops.domain.job.step.status.StepStatus;
 import ai.starwhale.mlops.domain.task.bo.Task;
 import ai.starwhale.mlops.domain.task.status.TaskStatus;
 import ai.starwhale.mlops.domain.task.status.TaskStatusMachine;
-import ai.starwhale.mlops.schedule.SwTaskScheduler;
+import ai.starwhale.mlops.schedule.TaskScheduler;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -55,9 +55,9 @@ public class JobUpdateHelperTest {
 
         JobStatusMachine jobStatusMachine = new JobStatusMachine();
         JobDao jobDao = mock(JobDao.class);
-        SwTaskScheduler swTaskScheduler = mock(SwTaskScheduler.class);
+        TaskScheduler taskScheduler = mock(TaskScheduler.class);
         JobUpdateHelper jobUpdateHelper = new JobUpdateHelper(hotJobHolder, jobStatusCalculator, jobDao,
-                jobStatusMachine, swTaskScheduler, taskStatusMachine);
+                jobStatusMachine, taskScheduler, taskStatusMachine);
         Job mockJob = new JobMockHolder().mockJob();
         mockJob.getSteps().parallelStream().forEach(step -> {
             step.getTasks().parallelStream().forEach(t -> {
@@ -82,9 +82,9 @@ public class JobUpdateHelperTest {
 
         JobStatusMachine jobStatusMachine = new JobStatusMachine();
         JobDao jobDao = mock(JobDao.class);
-        SwTaskScheduler swTaskScheduler = mock(SwTaskScheduler.class);
+        TaskScheduler taskScheduler = mock(TaskScheduler.class);
         JobUpdateHelper jobUpdateHelper = new JobUpdateHelper(hotJobHolder, jobStatusCalculator, jobDao,
-                jobStatusMachine, swTaskScheduler, taskStatusMachine);
+                jobStatusMachine, taskScheduler, taskStatusMachine);
         Job mockJob = new JobMockHolder().mockJob();
 
         Task luckTask = mockJob.getSteps().get(0).getTasks().get(0);
@@ -110,9 +110,9 @@ public class JobUpdateHelperTest {
 
         JobStatusMachine jobStatusMachine = new JobStatusMachine();
         JobDao jobDao = mock(JobDao.class);
-        SwTaskScheduler swTaskScheduler = mock(SwTaskScheduler.class);
+        TaskScheduler taskScheduler = mock(TaskScheduler.class);
         JobUpdateHelper jobUpdateHelper = new JobUpdateHelper(hotJobHolder, jobStatusCalculator, jobDao,
-                jobStatusMachine, swTaskScheduler, taskStatusMachine);
+                jobStatusMachine, taskScheduler, taskStatusMachine);
         Job mockJob = new JobMockHolder().mockJob();
 
         mockJob.setStatus(JobStatus.RUNNING);
@@ -134,10 +134,10 @@ public class JobUpdateHelperTest {
 
         JobStatusMachine jobStatusMachine = new JobStatusMachine();
         JobDao jobDao = mock(JobDao.class);
-        SwTaskScheduler swTaskScheduler = mock(SwTaskScheduler.class);
+        TaskScheduler taskScheduler = mock(TaskScheduler.class);
 
         JobUpdateHelper jobUpdateHelper = new JobUpdateHelper(hotJobHolder, jobStatusCalculator, jobDao,
-                jobStatusMachine, swTaskScheduler, taskStatusMachine);
+                jobStatusMachine, taskScheduler, taskStatusMachine);
         Job mockJob = new JobMockHolder().mockJob();
 
         mockJob.setStatus(JobStatus.READY);
@@ -155,7 +155,7 @@ public class JobUpdateHelperTest {
 
         var jobStatusMachine = new JobStatusMachine();
         var jobDao = mock(JobDao.class);
-        var swTaskScheduler = mock(SwTaskScheduler.class);
+        var swTaskScheduler = mock(TaskScheduler.class);
 
         var jobUpdateHelper = new JobUpdateHelper(hotJobHolder, jobStatusCalculator, jobDao,
                 jobStatusMachine, swTaskScheduler, taskStatusMachine);

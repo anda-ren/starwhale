@@ -20,7 +20,7 @@ import ai.starwhale.mlops.domain.task.bo.Task;
 import ai.starwhale.mlops.domain.task.status.TaskStatus;
 import ai.starwhale.mlops.domain.task.status.TaskStatusChangeWatcher;
 import ai.starwhale.mlops.domain.task.status.TaskStatusMachine;
-import ai.starwhale.mlops.schedule.SwTaskScheduler;
+import ai.starwhale.mlops.schedule.TaskScheduler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.DelayQueue;
@@ -38,7 +38,7 @@ import org.springframework.stereotype.Component;
 @Order(6)
 public class TaskWatcherForSchedule implements TaskStatusChangeWatcher {
 
-    final SwTaskScheduler taskScheduler;
+    final TaskScheduler taskScheduler;
 
     final TaskStatusMachine taskStatusMachine;
 
@@ -47,7 +47,7 @@ public class TaskWatcherForSchedule implements TaskStatusChangeWatcher {
     final DelayQueue<TaskToDelete> taskToDeletes;
 
     public TaskWatcherForSchedule(
-            SwTaskScheduler taskScheduler,
+            TaskScheduler taskScheduler,
             TaskStatusMachine taskStatusMachine,
             @Value("${sw.task.deletion-delay-minutes}") Long deletionDelayMinutes
     ) {

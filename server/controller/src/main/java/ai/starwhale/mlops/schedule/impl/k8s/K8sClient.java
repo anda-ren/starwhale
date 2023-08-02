@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.schedule.k8s;
+package ai.starwhale.mlops.schedule.impl.k8s;
 
 import io.kubernetes.client.Exec;
 import io.kubernetes.client.custom.V1Patch;

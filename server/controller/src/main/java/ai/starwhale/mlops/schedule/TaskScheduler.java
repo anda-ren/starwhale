@@ -23,7 +23,7 @@ import java.util.concurrent.Future;
 /**
  * schedule tasks of jobs
  */
-public interface SwTaskScheduler {
+public interface TaskScheduler {
 
 
     /**

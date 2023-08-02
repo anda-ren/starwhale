@@ -26,7 +26,7 @@ import ai.starwhale.mlops.domain.task.status.TaskStatus;
 import ai.starwhale.mlops.domain.task.status.TaskStatusChangeWatcher;
 import ai.starwhale.mlops.domain.task.status.TaskStatusMachine;
 import ai.starwhale.mlops.domain.task.status.watchers.TaskWatcherForJobStatus;
-import ai.starwhale.mlops.schedule.SwTaskScheduler;
+import ai.starwhale.mlops.schedule.TaskScheduler;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Set;
@@ -43,19 +43,19 @@ public class JobUpdateHelper {
     final JobStatusCalculator jobStatusCalculator;
     final JobDao jobDao;
     final JobStatusMachine jobStatusMachine;
-    final SwTaskScheduler swTaskScheduler;
+    final TaskScheduler taskScheduler;
     final TaskStatusMachine taskStatusMachine;
 
     public JobUpdateHelper(HotJobHolder jobHolder,
                            JobStatusCalculator jobStatusCalculator,
                            JobDao jobDao, JobStatusMachine jobStatusMachine,
-                           SwTaskScheduler swTaskScheduler,
+                           TaskScheduler taskScheduler,
                            TaskStatusMachine taskStatusMachine) {
         this.jobHolder = jobHolder;
         this.jobStatusCalculator = jobStatusCalculator;
         this.jobDao = jobDao;
         this.jobStatusMachine = jobStatusMachine;
-        this.swTaskScheduler = swTaskScheduler;
+        this.taskScheduler = taskScheduler;
         this.taskStatusMachine = taskStatusMachine;
     }
 

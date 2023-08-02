@@ -59,7 +59,7 @@ import ai.starwhale.mlops.exception.SwValidationException;
 import ai.starwhale.mlops.exception.SwValidationException.ValidSubject;
 import ai.starwhale.mlops.exception.api.StarwhaleApiException;
 import ai.starwhale.mlops.resulting.ResultQuerier;
-import ai.starwhale.mlops.schedule.SwTaskScheduler;
+import ai.starwhale.mlops.schedule.TaskScheduler;
 import cn.hutool.core.util.IdUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.pagehelper.PageHelper;
@@ -93,7 +93,7 @@ public class JobService {
     private final JobSpliterator jobSpliterator;
     private final HotJobHolder hotJobHolder;
     private final JobLoader jobLoader;
-    private final SwTaskScheduler swTaskScheduler;
+    private final TaskScheduler taskScheduler;
     private final ResultQuerier resultQuerier;
     private final StoragePathCoordinator storagePathCoordinator;
     private final UserService userService;
@@ -117,7 +117,7 @@ public class JobService {
             StoragePathCoordinator storagePathCoordinator,
             UserService userService, JobUpdateHelper jobUpdateHelper, TrashService trashService,
             SystemSettingService systemSettingService, JobSpecParser jobSpecParser,
-            SwTaskScheduler swTaskScheduler) {
+            TaskScheduler taskScheduler) {
         this.taskMapper = taskMapper;
         this.jobConvertor = jobConvertor;
         this.jobBoConverter = jobBoConverter;
@@ -136,7 +136,7 @@ public class JobService {
         this.trashService = trashService;
         this.systemSettingService = systemSettingService;
         this.jobSpecParser = jobSpecParser;
-        this.swTaskScheduler = swTaskScheduler;
+        this.taskScheduler = taskScheduler;
     }
 
     public PageInfo<JobVo> listJobs(String projectUrl, Long modelId, PageParams pageParams) {
@@ -449,7 +449,7 @@ public class JobService {
         }
 
         try {
-            var resp = swTaskScheduler.exec(task, execRequest.getCommand()).get();
+            var resp = taskScheduler.exec(task, execRequest.getCommand()).get();
             return ExecResponse.builder().stdout(resp[0]).stderr(resp[1]).build();
         } catch (InterruptedException | ExecutionException e) {
             throw new SwProcessException(SwProcessException.ErrorType.K8S, "exec task failed", e);

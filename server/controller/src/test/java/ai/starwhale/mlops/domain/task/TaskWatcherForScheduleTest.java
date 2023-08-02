@@ -27,7 +27,7 @@ import ai.starwhale.mlops.domain.task.bo.Task;
 import ai.starwhale.mlops.domain.task.status.TaskStatus;
 import ai.starwhale.mlops.domain.task.status.TaskStatusMachine;
 import ai.starwhale.mlops.domain.task.status.watchers.TaskWatcherForSchedule;
-import ai.starwhale.mlops.schedule.SwTaskScheduler;
+import ai.starwhale.mlops.schedule.TaskScheduler;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -41,8 +41,8 @@ public class TaskWatcherForScheduleTest {
 
     @Test
     public void testChangeAdopt() {
-        SwTaskScheduler taskScheduler = mock(
-                SwTaskScheduler.class);
+        TaskScheduler taskScheduler = mock(
+                TaskScheduler.class);
         TaskWatcherForSchedule taskWatcherForSchedule = new TaskWatcherForSchedule(taskScheduler,
                 taskStatusMachine, 0L);
         Task task = Task.builder()
@@ -58,8 +58,8 @@ public class TaskWatcherForScheduleTest {
 
     @Test
     public void testChangeStopSchedule() {
-        SwTaskScheduler taskScheduler = mock(
-                SwTaskScheduler.class);
+        TaskScheduler taskScheduler = mock(
+                TaskScheduler.class);
         TaskWatcherForSchedule taskWatcherForSchedule = new TaskWatcherForSchedule(taskScheduler,
                 taskStatusMachine, 100L);
         Task task = Task.builder()
@@ -80,8 +80,8 @@ public class TaskWatcherForScheduleTest {
 
     @Test
     public void testDelayStopSchedule() throws InterruptedException {
-        SwTaskScheduler taskScheduler = mock(
-                SwTaskScheduler.class);
+        TaskScheduler taskScheduler = mock(
+                TaskScheduler.class);
         TaskWatcherForSchedule taskWatcherForSchedule = new TaskWatcherForSchedule(taskScheduler,
                 taskStatusMachine, 1L);
         Task task = Task.builder()
@@ -104,8 +104,8 @@ public class TaskWatcherForScheduleTest {
 
     @Test
     public void testChangeIgnore() {
-        SwTaskScheduler taskScheduler = mock(
-                SwTaskScheduler.class);
+        TaskScheduler taskScheduler = mock(
+                TaskScheduler.class);
         TaskWatcherForSchedule taskWatcherForSchedule = new TaskWatcherForSchedule(taskScheduler,
                 taskStatusMachine, 0L);
         Task task = Task.builder()
@@ -124,7 +124,7 @@ public class TaskWatcherForScheduleTest {
 
     @Test
     public void testCancelling() {
-        SwTaskScheduler taskScheduler = mock(SwTaskScheduler.class);
+        TaskScheduler taskScheduler = mock(TaskScheduler.class);
         var taskWatcherForSchedule = new TaskWatcherForSchedule(taskScheduler, taskStatusMachine, 0L);
         Task task = Task.builder()
                 .id(1L)

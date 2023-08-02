@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.reporting;
+package ai.starwhale.mlops.schedule.reporting;
 
 import ai.starwhale.mlops.domain.task.status.TaskStatus;
 import lombok.AllArgsConstructor;

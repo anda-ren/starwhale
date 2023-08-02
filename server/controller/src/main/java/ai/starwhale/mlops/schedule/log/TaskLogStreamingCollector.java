@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.schedule.k8s;
+package ai.starwhale.mlops.schedule.log;
 
-import java.time.OffsetDateTime;
+import java.io.IOException;
 
-public class Util {
-    public static Long k8sTimeToMs(OffsetDateTime time) {
-        if (time == null) {
-            return null;
-        }
-        return time.toInstant().toEpochMilli();
-    }
+public interface TaskLogStreamingCollector {
+
+    String readLine() throws IOException;
+
+    void cancel();
 }

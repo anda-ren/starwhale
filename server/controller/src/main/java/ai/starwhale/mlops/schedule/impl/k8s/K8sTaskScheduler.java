@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.schedule.k8s;
+package ai.starwhale.mlops.schedule.impl.k8s;
 
 import ai.starwhale.mlops.configuration.RunTimeProperties;
 import ai.starwhale.mlops.configuration.security.TaskTokenValidator;
@@ -26,11 +26,11 @@ import ai.starwhale.mlops.domain.task.bo.Task;
 import ai.starwhale.mlops.domain.task.status.TaskStatus;
 import ai.starwhale.mlops.domain.task.status.TaskStatusChangeWatcher;
 import ai.starwhale.mlops.domain.task.status.watchers.TaskWatcherForSchedule;
-import ai.starwhale.mlops.domain.task.status.watchers.log.TaskLogK8sCollector;
 import ai.starwhale.mlops.exception.StarwhaleException;
 import ai.starwhale.mlops.exception.SwProcessException;
 import ai.starwhale.mlops.exception.SwProcessException.ErrorType;
-import ai.starwhale.mlops.schedule.SwTaskScheduler;
+import ai.starwhale.mlops.schedule.TaskScheduler;
+import ai.starwhale.mlops.schedule.log.TaskLogSaver;
 import ai.starwhale.mlops.storage.StorageAccessService;
 import cn.hutool.json.JSONUtil;
 import io.kubernetes.client.openapi.ApiException;
@@ -55,7 +55,7 @@ import org.springframework.util.StringUtils;
 
 @Service
 @Slf4j
-public class K8sTaskScheduler implements SwTaskScheduler {
+public class K8sTaskScheduler implements TaskScheduler {
 
     final K8sClient k8sClient;
 
@@ -73,7 +73,7 @@ public class K8sTaskScheduler implements SwTaskScheduler {
     final StorageAccessService storageAccessService;
     final ThreadPoolTaskScheduler taskScheduler;
 
-    private final TaskLogK8sCollector taskLogK8sCollector;
+    private final TaskLogSaver taskLogSaver;
 
     public K8sTaskScheduler(
             K8sClient k8sClient,
@@ -86,7 +86,7 @@ public class K8sTaskScheduler implements SwTaskScheduler {
             @Value("${sw.infra.k8s.job.restart-policy}") String restartPolicy,
             @Value("${sw.infra.k8s.job.backoff-limit}") Integer backoffLimit,
             StorageAccessService storageAccessService,
-            TaskLogK8sCollector taskLogK8sCollector,
+            TaskLogSaver taskLogSaver,
             ThreadPoolTaskScheduler taskScheduler
     ) {
         this.k8sClient = k8sClient;
@@ -99,7 +99,7 @@ public class K8sTaskScheduler implements SwTaskScheduler {
         this.datasetLoadBatchSize = datasetLoadBatchSize;
         this.restartPolicy = restartPolicy;
         this.backoffLimit = backoffLimit;
-        this.taskLogK8sCollector = taskLogK8sCollector;
+        this.taskLogSaver = taskLogSaver;
         this.taskScheduler = taskScheduler;
     }
 
@@ -114,7 +114,7 @@ public class K8sTaskScheduler implements SwTaskScheduler {
             try {
                 // K8s do not support job suspend before 1.24, so we collect logs and delete job directly
                 // https://kubernetes.io/docs/concepts/workloads/controllers/job/#suspending-a-job
-                taskLogK8sCollector.collect(task);
+                taskLogSaver.saveLog(task);
             } catch (StarwhaleException e) {
                 log.warn("collect task {} log failed, {}", task.getId(), e.getMessage());
             }

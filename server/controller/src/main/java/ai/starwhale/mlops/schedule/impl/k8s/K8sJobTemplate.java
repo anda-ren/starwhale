@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.schedule.k8s;
+package ai.starwhale.mlops.schedule.impl.k8s;
 
 import ai.starwhale.mlops.domain.system.resourcepool.bo.Toleration;
 import io.kubernetes.client.custom.IntOrString;

@@ -14,13 +14,36 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.schedule.k8s.log;
+package ai.starwhale.mlops.schedule.impl.k8s;
 
-import java.io.IOException;
+import io.kubernetes.client.openapi.models.V1EnvVar;
+import io.kubernetes.client.openapi.models.V1Probe;
+import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-public interface CancellableJobLogCollector {
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class ContainerOverwriteSpec {
 
-    String readLine() throws IOException;
+    String name;
 
-    void cancel();
+    String image;
+
+    List<String> cmds;
+
+    ResourceOverwriteSpec resourceOverwriteSpec;
+
+    List<V1EnvVar> envs;
+
+    V1Probe readinessProbe;
+
+    public ContainerOverwriteSpec(String name) {
+        this.name = name;
+    }
+
 }
