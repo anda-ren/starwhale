@@ -16,12 +16,10 @@
 
 package ai.starwhale.mlops.schedule.k8s;
 
-import ai.starwhale.mlops.common.Constants;
 import ai.starwhale.mlops.configuration.RunTimeProperties;
 import ai.starwhale.mlops.configuration.security.TaskTokenValidator;
 import ai.starwhale.mlops.domain.job.bo.Job;
 import ai.starwhale.mlops.domain.job.bo.JobRuntime;
-import ai.starwhale.mlops.domain.job.spec.StepSpec;
 import ai.starwhale.mlops.domain.runtime.RuntimeResource;
 import ai.starwhale.mlops.domain.system.resourcepool.bo.Toleration;
 import ai.starwhale.mlops.domain.task.bo.Task;
@@ -35,8 +33,6 @@ import ai.starwhale.mlops.exception.SwProcessException.ErrorType;
 import ai.starwhale.mlops.schedule.SwTaskScheduler;
 import ai.starwhale.mlops.storage.StorageAccessService;
 import cn.hutool.json.JSONUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1EnvVarSource;
@@ -269,20 +265,6 @@ public class K8sTaskScheduler implements SwTaskScheduler {
         coreContainerEnvs.put("SW_RUNTIME_PYTHON_VERSION", runtime.getManifest().getEnvironment().getPython());
         coreContainerEnvs.put("SW_VERSION", runtime.getManifest().getEnvironment().getLock().getSwVersion());
         coreContainerEnvs.put("SW_TASK_STEP", task.getStep().getName());
-        try {
-            var stepSpecs = Constants.yamlMapper.readValue(swJob.getStepSpec(), new TypeReference<List<StepSpec>>() {
-            });
-            for (var stepSpec : stepSpecs) {
-                if (task.getStep().getName().equals(stepSpec.getName())) {
-                    if (StringUtils.hasText(stepSpec.getExtraCmdArgs())) {
-                        coreContainerEnvs.put("SW_TASK_EXTRA_CMD_ARGS", stepSpec.getExtraCmdArgs());
-                    }
-                }
-            }
-        } catch (JsonProcessingException e) {
-            log.error("parsing job step spec failed, is there any version conflict?", e);
-            throw new SwProcessException(ErrorType.SYSTEM, "parsing job step spec failed", e);
-        }
 
         coreContainerEnvs.put("DATASET_CONSUMPTION_BATCH_SIZE", String.valueOf(datasetLoadBatchSize));
         // support multi dataset uris
