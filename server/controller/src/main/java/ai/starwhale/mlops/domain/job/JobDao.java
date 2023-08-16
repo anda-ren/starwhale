@@ -87,7 +87,11 @@ public class JobDao implements BundleAccessor, RecoverAccessor {
                 datasetVersionMapper.insert(jobFlattenEntity.getId(), datasetVersionIds);
             }
             // TODO: only sync evaluation repo
-            return jobRepo.addJob(jobFlattenEntity) > 0;
+            if(jobFlattenEntity.getType() == JobType.EVALUATION){
+                return jobRepo.addJob(jobFlattenEntity) > 0;
+            }
+            return true;
+
         }
         return false;
     }
@@ -112,6 +116,7 @@ public class JobDao implements BundleAccessor, RecoverAccessor {
                 .devWay(flattenEntity.getDevWay())
                 .devPassword(flattenEntity.getDevPassword())
                 .autoReleaseTime(flattenEntity.getAutoReleaseTime())
+                .virtualJobName(flattenEntity.getName())
                 .build();
     }
 

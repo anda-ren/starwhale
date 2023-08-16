@@ -67,7 +67,6 @@ import ai.starwhale.mlops.domain.bundle.tag.BundleVersionTagDao;
 import ai.starwhale.mlops.domain.dataset.bo.DatasetQuery;
 import ai.starwhale.mlops.domain.dataset.bo.DatasetVersion;
 import ai.starwhale.mlops.domain.dataset.bo.DatasetVersionQuery;
-import ai.starwhale.mlops.domain.dataset.build.BuildStatus;
 import ai.starwhale.mlops.domain.dataset.build.BuildType;
 import ai.starwhale.mlops.domain.dataset.build.bo.CreateBuildRecordRequest;
 import ai.starwhale.mlops.domain.dataset.build.mapper.BuildRecordMapper;
@@ -222,8 +221,8 @@ public class DatasetServiceTest {
                 k8sClient,
                 k8sJobTemplate,
                 datasetBuildTokenValidator,
-                systemSettingService, ""
-        );
+                systemSettingService, "",
+                jobService, virtualJobLoader, jobSpecParser, taskMapper);
         bundleManager = mock(BundleManager.class);
         given(bundleManager.getBundleId(any(BundleUrl.class)))
                 .willAnswer(invocation -> {
@@ -494,8 +493,8 @@ public class DatasetServiceTest {
                 mock(K8sClient.class),
                 mock(K8sJobTemplate.class),
                 mock(DatasetBuildTokenValidator.class),
-                mock(SystemSettingService.class), ""
-        );
+                mock(SystemSettingService.class), "",
+                jobService, virtualJobLoader, jobSpecParser, taskMapper);
 
         // public project
         when(projectService.getProjectVo("pub")).thenReturn(ProjectVo.builder().id("1").privacy("PUBLIC").build());
@@ -668,54 +667,14 @@ public class DatasetServiceTest {
     }
 
     @Test
-    public void testUpdateBuildRecord() {
-        var recordId = 1L;
-        var projectId = 101L;
-        var datasetName = "test-build-ds";
-
-        // case1: not found
-        given(buildRecordMapper.selectById(recordId)).willReturn(null);
-        assertFalse(service.updateBuildStatus(recordId, BuildStatus.SUCCESS));
-
-        var record = BuildRecordEntity.builder()
-                .id(recordId).projectId(projectId).datasetName(datasetName).shared(false).build();
-        given(buildRecordMapper.selectById(recordId)).willReturn(record);
-
-        // case2: update failed
-        given(buildRecordMapper.updateStatus(recordId, BuildStatus.SUCCESS)).willReturn(0);
-        assertFalse(service.updateBuildStatus(recordId, BuildStatus.SUCCESS));
-
-        // update is ok
-        given(buildRecordMapper.updateStatus(eq(recordId), any())).willReturn(1);
-        // case3: update to failed and shared is false
-        service.updateBuildStatus(recordId, BuildStatus.FAILED);
-        verify(datasetMapper, times(0)).findByName(eq(datasetName), eq(projectId), eq(true));
-
-        record.setShared(true);
-        // case4: update to failed and shared is true
-        service.updateBuildStatus(recordId, BuildStatus.FAILED);
-        verify(datasetMapper, times(0)).findByName(eq(datasetName), eq(projectId), eq(true));
-
-        // case5: update to success and shared is true
-        given(datasetMapper.findByName(datasetName, projectId, false))
-                .willReturn(DatasetEntity.builder().id(1000L).build());
-        given(datasetVersionMapper.findByLatest(1000L))
-                .willReturn(DatasetVersionEntity.builder().id(10000L).build());
-
-        service.updateBuildStatus(recordId, BuildStatus.SUCCESS);
-
-        verify(datasetVersionMapper, times(1)).updateShared(eq(10000L), eq(true));
-    }
-
-    @Test
     public void testListBuildRecord() {
         Long project = 1L;
         given(projectService.findProject(String.valueOf(project))).willReturn(Project.builder().id(project).build());
-        given(buildRecordMapper.selectByStatus(project, BuildStatus.SUCCESS))
+        given(buildRecordMapper.list(project))
                 .willReturn(List.of(BuildRecordEntity.builder().id(10L).datasetName("ds").build()));
 
         var page = service.listBuildRecords(
-                String.valueOf(project), BuildStatus.SUCCESS, PageParams.builder().pageNum(1).pageSize(10).build());
+                String.valueOf(project), PageParams.builder().pageNum(1).pageSize(10).build());
         assertThat(page, allOf(
                 hasProperty("list", iterableWithSize(1))
         ));

@@ -1,11 +1,12 @@
 import React, { useCallback, useMemo, useState } from 'react'
+import _ from 'lodash'
 import useTranslation from '@/hooks/useTranslation'
 import Card from '@/components/Card'
 import { getToken } from '@/api'
 import { toaster } from 'baseui/toast'
 import { BusyPlaceholder } from '@starwhale/ui'
 import DatasetTaskBuildList from './DatasetBuildList'
-import { fetchDatasetTaskOfflineLogFiles } from '@/domain/dataset/services/dataset'
+import { fetchDatasetTaskOfflineLogFiles, fetchTaskOfflineFileLog } from '@/domain/dataset/services/dataset'
 import { IDatasetTaskBuildSchema, TaskBuildStatusType } from '@/domain/dataset/schemas/dataset'
 
 const ComplexToolbarLogViewer = React.lazy(() => import('@/components/LogViewer/LogViewer'))
@@ -28,16 +29,27 @@ export default function DatasetBuildListCard() {
         const files: Record<string, string> = {}
         const key = [task?.datasetName, task?.id].join('@')
 
-        if ([TaskBuildStatusType.BUILDING].includes(task.status)) {
+        if ([TaskBuildStatusType.RUNNING].includes(task.status)) {
             files[key] = 'ws'
         } else {
-            const data = await fetchDatasetTaskOfflineLogFiles(task?.datasetName, task?.id)
-            files[key] = data ?? ''
+            const data = await fetchDatasetTaskOfflineLogFiles(task?.taskId)
+            // files[key] = data ?? ''
+            if (!_.isEmpty(data)) {
+                await Promise.all(
+                    data.map(async (v: string) => {
+                        const content = await fetchTaskOfflineFileLog(task?.taskId, v)
+                        const key = [task?.taskId, v].join('@')
+                        files[key] = content ?? ''
+                    })
+                )
+            }
         }
 
         if (Object.keys(files).length === 0) {
             toaster.negative('No logs collected for this task', { autoHideDuration: 2000 })
         }
+
+        
 
         setCurrentLogFiles({
             ...files,
@@ -49,7 +61,7 @@ export default function DatasetBuildListCard() {
     const currentOnlineLogUrl = useMemo(() => {
         return `${window.location.protocol === 'http:' ? 'ws:' : 'wss:'}//${
             window.location.host
-        }/api/v1/log/online/dataset/${currentTask?.datasetName}/build/${currentTask?.id}?Authorization=${getToken()}`
+        }/api/v1/log/online/${currentTask?.taskId}?Authorization=${getToken()}`
     }, [currentTask])
 
     const sources = React.useMemo(() => {

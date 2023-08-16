@@ -14,31 +14,19 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.schedule;
+package ai.starwhale.mlops.schedule.entrypoint;
 
 import ai.starwhale.mlops.domain.task.bo.Task;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.stereotype.Service;
+import java.util.Map;
 
-@Service
-public class TaskCommandGetter {
+public interface TaskContainerEntrypointBuilder {
 
-    public TaskCommand getCmd(Task task) {
-        //TODO get the real command of tasks according to schema of task
-        return TaskCommand.builder().cmd(new String[]{"run"}).build();
-    }
+    Map<String, String> buildContainerEnvs(Task task);
 
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class TaskCommand {
+    TaskCommand getCmd(Task task);
 
-        String[] cmd;
-        String[] entrypoint;
-    }
+    String getImage(Task task);
+
+    boolean matches(Task task);
 
 }

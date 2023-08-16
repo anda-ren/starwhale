@@ -98,6 +98,8 @@ public class Job extends TimeConcern {
 
     Date pinnedTime;
 
+    String virtualJobName;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

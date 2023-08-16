@@ -66,7 +66,7 @@ public class PodEventHandlerTest {
         buildLogCollector = mock(BuildLogCollector.class);
         taskReportReceiver = mock(TaskReportReceiver.class);
         podEventHandler = new PodEventHandler(
-                taskLogSaver, buildLogCollector, taskReportReceiver, hotJobHolder, mock(DatasetService.class));
+                taskLogSaver, buildLogCollector, taskReportReceiver, hotJobHolder);
         v1Pod = new V1Pod()
                 .metadata(new V1ObjectMeta()
                         .labels(Map.of("job-name", "3", "job-type", "eval")).name("3-xxx"))

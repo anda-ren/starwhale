@@ -27,12 +27,11 @@ import ai.starwhale.mlops.domain.job.bo.JobRuntime;
 import ai.starwhale.mlops.domain.job.step.bo.Step;
 import ai.starwhale.mlops.domain.task.bo.Task;
 import ai.starwhale.mlops.domain.task.status.TaskStatus;
-import ai.starwhale.mlops.schedule.TaskCommandGetter;
-import ai.starwhale.mlops.schedule.TaskCommandGetter.TaskCommand;
-import ai.starwhale.mlops.schedule.TaskRunningEnvBuilder;
 import ai.starwhale.mlops.schedule.impl.docker.reporting.DockerTaskReporter;
 import ai.starwhale.mlops.schedule.reporting.ReportedTask;
 import ai.starwhale.mlops.schedule.reporting.TaskReportReceiver;
+import ai.starwhale.mlops.schedule.entrypoint.TaskContainerEntrypointBuilder;
+import ai.starwhale.mlops.schedule.entrypoint.TaskContainerEntrypointBuilderFinder;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
@@ -60,11 +59,10 @@ public class SwTaskSchedulerDockerTest {
     ContainerTaskMapper containerTaskMapper;
     DockerTaskReporter dockerTaskReporter;
     ExecutorService cmdExecThreadPool;
-    TaskRunningEnvBuilder taskRunningEnvBuilder;
+    TaskContainerEntrypointBuilderFinder taskContainerEntrypointBuilderFinder;
     String network;
     String nodeIp;
     SwTaskSchedulerDocker swTaskSchedulerDocker;
-    TaskCommandGetter taskCommandGetter;
     DockerClient dockerClient;
 
     TaskReportReceiver taskReportReceiver;
@@ -85,8 +83,7 @@ public class SwTaskSchedulerDockerTest {
         dockerTaskReporter = mock(DockerTaskReporter.class);
         cmdExecThreadPool = Executors.newCachedThreadPool();
         ;
-        taskRunningEnvBuilder = mock(TaskRunningEnvBuilder.class);
-        taskCommandGetter = mock(TaskCommandGetter.class);
+        taskContainerEntrypointBuilderFinder = mock(TaskContainerEntrypointBuilderFinder.class);
         network = "host";
         nodeIp = "127.1.0.2";
         swTaskSchedulerDocker = new SwTaskSchedulerDocker(
@@ -94,10 +91,10 @@ public class SwTaskSchedulerDockerTest {
                 containerTaskMapper,
                 dockerTaskReporter,
                 cmdExecThreadPool,
-                taskRunningEnvBuilder,
+                taskContainerEntrypointBuilderFinder,
                 network,
                 nodeIp,
-                taskCommandGetter, new HostResourceConfigBuilder());
+                new HostResourceConfigBuilder());
         try {
             dockerClient.removeContainerCmd(containerName).withForce(true).exec();
         } catch (Exception e) {
@@ -148,10 +145,9 @@ public class SwTaskSchedulerDockerTest {
     }
 
     private void testSchedule(Task task) {
-        when(taskCommandGetter.getCmd(any())).thenReturn(
-                new TaskCommand(new String[]{"tail", "-f", "/dev/null"}, null));
-        when(taskRunningEnvBuilder.buildCoreContainerEnvs(any())).thenReturn(Map.of("ENV_NAME", "env_value"));
-
+        TaskContainerEntrypointBuilder tceb = mock(TaskContainerEntrypointBuilder.class);
+        when(tceb.buildContainerEnvs(any())).thenReturn(Map.of("ENV_NAME", "env_value"));
+        when(taskContainerEntrypointBuilderFinder.findTceb(any())).thenReturn(tceb);
         swTaskSchedulerDocker.schedule(Set.of(task), taskReportReceiver);
 
     }

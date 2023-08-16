@@ -14,37 +14,20 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.schedule.impl.k8s;
+package ai.starwhale.mlops.schedule.entrypoint;
 
-import io.kubernetes.client.openapi.models.V1EnvVar;
-import io.kubernetes.client.openapi.models.V1Probe;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
-public class ContainerOverwriteSpec {
+@NoArgsConstructor
+@AllArgsConstructor
+public class TaskCommand {
 
-    String name;
-
-    String image;
-
-    List<String> cmds;
-    List<String> entrypoint;
-
-    ResourceOverwriteSpec resourceOverwriteSpec;
-
-    List<V1EnvVar> envs;
-
-    V1Probe readinessProbe;
-
-    public ContainerOverwriteSpec(String name) {
-        this.name = name;
-    }
+    String[] cmd;
+    String[] entrypoint;
 
 }

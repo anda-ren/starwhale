@@ -88,9 +88,9 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class JobServiceTest {
+public class JobServiceForWebTest {
 
-    private JobService service;
+    private JobServiceForWeb service;
     private TaskMapper taskMapper;
     private JobConverter jobConverter;
     private JobBoConverter jobBoConverter;
@@ -142,11 +142,11 @@ public class JobServiceTest {
         jobSpecParser = new JobSpecParser();
         swTaskScheduler = mock(SwTaskScheduler.class);
 
-        service = new JobService(
+        service = new JobServiceForWeb(
                 taskMapper, jobConverter, jobBoConverter, runtimeService, jobSpliterator,
                 hotJobHolder, projectService, jobDao, jobLoader, modelService,
                 resultQuerier, datasetService, storagePathCoordinator, userService, mock(JobUpdateHelper.class),
-                trashService, systemSettingService, jobSpecParser, swTaskScheduler);
+                trashService, systemSettingService, jobSpecParser, swTaskScheduler, jobCreator);
     }
 
     @Test

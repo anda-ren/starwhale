@@ -69,6 +69,10 @@ public class StepSpec {
     @JsonProperty("require_dataset")
     private Boolean requireDataset;
 
+    @JsonProperty("custom_step")
+    CustomStep customStep;
+
+
     @JsonIgnore
     public String getFriendlyName() {
         return StringUtils.hasText(showName) ? showName : name;

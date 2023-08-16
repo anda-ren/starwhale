@@ -174,7 +174,6 @@ public class JobBoConverterTest {
         Assertions.assertNotNull(swrt);
         Assertions.assertEquals(runtimeVersionEntity.getVersionName(), swrt.getVersion());
         Assertions.assertEquals(runtimeEntity.getRuntimeName(), swrt.getName());
-        Assertions.assertEquals(runtimeVersionEntity.getStoragePath(), swrt.getStoragePath());
 
         Model model = job.getModel();
         Assertions.assertNotNull(model);

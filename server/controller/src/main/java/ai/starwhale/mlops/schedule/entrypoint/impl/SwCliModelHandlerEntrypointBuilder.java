@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.schedule;
-
+package ai.starwhale.mlops.schedule.entrypoint.impl;
 
 import ai.starwhale.mlops.configuration.RunTimeProperties;
 import ai.starwhale.mlops.configuration.security.TaskTokenValidator;
@@ -23,18 +22,23 @@ import ai.starwhale.mlops.domain.job.bo.Job;
 import ai.starwhale.mlops.domain.runtime.RuntimeResource;
 import ai.starwhale.mlops.domain.task.bo.Task;
 import ai.starwhale.mlops.schedule.impl.k8s.ResourceOverwriteSpec;
+import ai.starwhale.mlops.schedule.entrypoint.TaskCommand;
+import ai.starwhale.mlops.schedule.entrypoint.TaskContainerEntrypointBuilder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 
-@Service
-public class TaskRunningEnvBuilder {
+@Order(98)
+@Component
+public class SwCliModelHandlerEntrypointBuilder implements TaskContainerEntrypointBuilder {
+
 
     static final String FORMATTER_URI_ARTIFACT = "%s/project/%s/%s/%s/version/%s";
     static final String FORMATTER_VERSION_ARTIFACT = "%s/version/%s";
@@ -44,7 +48,7 @@ public class TaskRunningEnvBuilder {
     final RunTimeProperties runTimeProperties;
     final TaskTokenValidator taskTokenValidator;
 
-    public TaskRunningEnvBuilder(
+    public SwCliModelHandlerEntrypointBuilder(
             @Value("${sw.instance-uri}") String instanceUri,
             @Value("${sw.task.dev-port}") int devPort,
             @Value("${sw.dataset.load.batch-size}") int datasetLoadBatchSize,
@@ -59,7 +63,7 @@ public class TaskRunningEnvBuilder {
     }
 
 
-    public Map<String, String> buildCoreContainerEnvs(Task task) {
+    public Map<String, String> buildContainerEnvs(Task task) {
         Job swJob = task.getStep().getJob();
         var model = swJob.getModel();
         var runtime = swJob.getJobRuntime();
@@ -141,7 +145,22 @@ public class TaskRunningEnvBuilder {
         return coreContainerEnvs;
     }
 
-    public List<RuntimeResource> deviceResourceRequirements(Task task) {
+    @Override
+    public TaskCommand getCmd(Task task) {
+        return TaskCommand.builder().cmd(new String[]{"run"}).build();
+    }
+
+    @Override
+    public String getImage(Task task) {
+        return task.getStep().getJob().getJobRuntime().getImage();
+    }
+
+    @Override
+    public boolean matches(Task task) {
+        return null == task.getStep().getSpec().getCustomStep();
+    }
+
+    private List<RuntimeResource> deviceResourceRequirements(Task task) {
         List<RuntimeResource> runtimeResources = task.getTaskRequest().getRuntimeResources();
         var pool = task.getStep().getResourcePool();
         if (pool == null) {

@@ -17,7 +17,6 @@
 package ai.starwhale.mlops.configuration.security;
 
 import ai.starwhale.mlops.common.util.JwtTokenUtil;
-import ai.starwhale.mlops.domain.dataset.build.BuildStatus;
 import ai.starwhale.mlops.domain.dataset.build.mapper.BuildRecordMapper;
 import ai.starwhale.mlops.domain.user.bo.User;
 import ai.starwhale.mlops.exception.SwValidationException;
@@ -54,10 +53,6 @@ public class DatasetBuildTokenValidator implements JwtClaimValidator {
         try {
             id = ((Number) claimId).longValue();
         } catch (ClassCastException e) {
-            throw new SwValidationException(ValidSubject.USER, "dataset build record claim invalid");
-        }
-        var record = mapper.selectById(id);
-        if (null == record || BuildStatus.BUILDING != record.getStatus()) {
             throw new SwValidationException(ValidSubject.USER, "dataset build record claim invalid");
         }
     }

@@ -31,6 +31,7 @@ import ai.starwhale.mlops.domain.user.po.UserEntity;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import org.apache.ibatis.annotations.Param;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -120,6 +121,25 @@ public class JobMapperTest extends MySqlContainerHolder {
     @Test
     public void testFindById() {
         validateJob(jobCreated, user, project, modelVersionEntity, jobMapper.findJobById(jobCreated.getId()));
+    }
+
+    @Test
+    public void testFindByWithoutModelAndRuntime() {
+        var virtualJob = JobEntity.builder().jobUuid(UUID.randomUUID().toString()).jobStatus(JobStatus.CREATED)
+                .resourcePool("rp").runtimeVersionId(-1L).modelVersionId(-1L)
+                .resultOutputPath("").type(JobType.EVALUATION)
+                .stepSpec("stepSpec2")
+                .devMode(true)
+                .autoReleaseTime(new Date(123 * 1000L))
+                .virtualJobName("vir_n")
+                .projectId(project.getId()).ownerId(user.getId()).build();
+        jobMapper.addJob(virtualJob);
+        var je= jobMapper.findJobById(virtualJob.getId());
+        Assertions.assertNull(je.getModelName());
+        Assertions.assertTrue(je.getModelVersion().isNull());
+        Assertions.assertEquals(-1L, je.getRuntimeVersionId());
+        Assertions.assertEquals(-1L, je.getModelVersionId());
+        Assertions.assertEquals("vir_n", je.getVirtualJobName());
     }
 
     @Test
