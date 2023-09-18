@@ -16,33 +16,36 @@
 
 package ai.starwhale.mlops.schedule.impl.docker.log;
 
-import ai.starwhale.mlops.domain.task.bo.Task;
+import ai.starwhale.mlops.domain.run.bo.Run;
 import ai.starwhale.mlops.exception.StarwhaleException;
+import ai.starwhale.mlops.schedule.impl.docker.ContainerRunMapper;
 import ai.starwhale.mlops.schedule.impl.docker.ContainerTaskMapper;
 import ai.starwhale.mlops.schedule.impl.docker.DockerClientFinder;
-import ai.starwhale.mlops.schedule.log.TaskLogCollectorFactory;
-import ai.starwhale.mlops.schedule.log.TaskLogOfflineCollector;
-import ai.starwhale.mlops.schedule.log.TaskLogStreamingCollector;
+import ai.starwhale.mlops.schedule.log.RunLogCollectorFactory;
+import ai.starwhale.mlops.schedule.log.RunLogOfflineCollector;
+import ai.starwhale.mlops.schedule.log.RunLogStreamingCollector;
 
-public class TaskLogCollectorFactoryDocker implements TaskLogCollectorFactory {
+public class RunLogCollectorFactoryDocker implements RunLogCollectorFactory {
 
     final DockerClientFinder dockerClientFinder;
 
-    final ContainerTaskMapper containerTaskMapper;
+    final ContainerRunMapper containerRunMapper;
 
-    public TaskLogCollectorFactoryDocker(DockerClientFinder dockerClientFinder,
-            ContainerTaskMapper containerTaskMapper) {
+    public RunLogCollectorFactoryDocker(
+            DockerClientFinder dockerClientFinder,
+            ContainerRunMapper containerRunMapper
+    ) {
         this.dockerClientFinder = dockerClientFinder;
-        this.containerTaskMapper = containerTaskMapper;
+        this.containerRunMapper = containerRunMapper;
     }
 
     @Override
-    public TaskLogOfflineCollector offlineCollector(Task task) throws StarwhaleException {
-        return new TaskLogOfflineCollectorDocker(task, dockerClientFinder, containerTaskMapper);
+    public RunLogOfflineCollector offlineCollector(Run run) throws StarwhaleException {
+        return new RunLogOfflineCollectorDocker(run, dockerClientFinder, containerRunMapper);
     }
 
     @Override
-    public TaskLogStreamingCollector streamingCollector(Task task) throws StarwhaleException {
-        return new TaskLogStreamingCollectorDocker(task, dockerClientFinder, containerTaskMapper);
+    public RunLogStreamingCollector streamingCollector(Run run) throws StarwhaleException {
+        return new RunLogStreamingCollectorDocker(run, dockerClientFinder, containerRunMapper);
     }
 }

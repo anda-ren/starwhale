@@ -20,8 +20,8 @@ import ai.starwhale.mlops.common.IdConverter;
 import ai.starwhale.mlops.domain.job.step.bo.Step;
 import ai.starwhale.mlops.domain.task.bo.Task;
 import ai.starwhale.mlops.exception.StarwhaleException;
-import ai.starwhale.mlops.schedule.log.TaskLogCollectorFactory;
-import ai.starwhale.mlops.schedule.log.TaskLogStreamingCollector;
+import ai.starwhale.mlops.schedule.log.RunLogCollectorFactory;
+import ai.starwhale.mlops.schedule.log.RunLogStreamingCollector;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -45,7 +45,7 @@ public class TaskLogWsServer {
 
     private static IdConverter idConvertor;
 
-    private static TaskLogCollectorFactory taskLogCollectorFactory;
+    private static RunLogCollectorFactory runLogCollectorFactory;
 
     private Session session;
 
@@ -53,7 +53,7 @@ public class TaskLogWsServer {
 
     private Long id;
 
-    private TaskLogStreamingCollector logCollector;
+    private RunLogStreamingCollector logCollector;
 
 
     @Autowired
@@ -62,8 +62,8 @@ public class TaskLogWsServer {
     }
 
     @Autowired
-    public void setTaskLogCollectorFactory(TaskLogCollectorFactory taskLogCollectorFactory) {
-        TaskLogWsServer.taskLogCollectorFactory = taskLogCollectorFactory;
+    public void setTaskLogCollectorFactory(RunLogCollectorFactory runLogCollectorFactory) {
+        TaskLogWsServer.runLogCollectorFactory = runLogCollectorFactory;
     }
 
 
@@ -73,7 +73,7 @@ public class TaskLogWsServer {
         this.readerId = session.getId();
         this.id = idConvertor.revert(taskId);
         try {
-            logCollector = taskLogCollectorFactory.streamingCollector(Task.builder().id(id).step(new Step()).build());
+            logCollector = runLogCollectorFactory.streamingCollector(Task.builder().id(id).step(new Step()).build());
         } catch (StarwhaleException e) {
             log.error("make k8s log collector failed", e);
         }

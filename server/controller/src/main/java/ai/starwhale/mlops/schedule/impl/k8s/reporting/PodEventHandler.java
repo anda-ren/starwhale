@@ -17,20 +17,21 @@
 package ai.starwhale.mlops.schedule.impl.k8s.reporting;
 
 import ai.starwhale.mlops.domain.job.cache.HotJobHolder;
+import ai.starwhale.mlops.domain.run.bo.RunStatus;
 import ai.starwhale.mlops.domain.task.bo.Task;
 import ai.starwhale.mlops.domain.task.status.TaskStatus;
 import ai.starwhale.mlops.schedule.impl.k8s.Util;
 import ai.starwhale.mlops.schedule.log.TaskLogSaver;
 import ai.starwhale.mlops.schedule.reporting.ReportedTask;
 import ai.starwhale.mlops.schedule.reporting.TaskReportReceiver;
+import ai.starwhale.mlops.schedule.reporting.run.ReportedRun;
+import ai.starwhale.mlops.schedule.reporting.run.RunReportReceiver;
 import io.kubernetes.client.informer.ResourceEventHandler;
 import io.kubernetes.client.openapi.models.V1Pod;
-import java.util.Collection;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 @Slf4j
@@ -39,15 +40,15 @@ import org.springframework.util.StringUtils;
 public class PodEventHandler implements ResourceEventHandler<V1Pod> {
 
     final TaskLogSaver taskLogSaver;
-    final TaskReportReceiver taskReportReceiver;
+    final RunReportReceiver runReportReceiver;
     final HotJobHolder jobHolder;
 
     public PodEventHandler(
             TaskLogSaver taskLogSaver,
-            TaskReportReceiver taskReportReceiver,
+            RunReportReceiver runReportReceiver,
             HotJobHolder jobHolder) {
         this.taskLogSaver = taskLogSaver;
-        this.taskReportReceiver = taskReportReceiver;
+        this.runReportReceiver = runReportReceiver;
         this.jobHolder = jobHolder;
     }
 
@@ -96,7 +97,7 @@ public class PodEventHandler implements ResourceEventHandler<V1Pod> {
             return;
         }
 
-        TaskStatus taskStatus;
+        RunStatus runStatus;
         var phase = pod.getStatus().getPhase();
         if (StringUtils.hasText(phase)) {
             switch (phase) {
@@ -107,14 +108,14 @@ public class PodEventHandler implements ResourceEventHandler<V1Pod> {
                 as well as the time spent downloading container images over the network.
                  */
                 case "Pending":
-                    taskStatus = TaskStatus.PREPARING;
+                    runStatus = RunStatus.PENDING;
                     break;
                 /*
                 Running The Pod has been bound to a node, and all the containers have been created.
                 At least one container is still running, or is in the process of starting or restarting.
                  */
                 case "Running":
-                    taskStatus = TaskStatus.RUNNING;
+                    runStatus = RunStatus.RUNNING;
                     break;
                 default:
                     return;
@@ -128,16 +129,15 @@ public class PodEventHandler implements ResourceEventHandler<V1Pod> {
         if (pod.getStatus() != null) {
             startTime = Util.k8sTimeToMs(pod.getStatus().getStartTime());
         }
-        log.debug("task:{} status changed to {}.", tid, taskStatus);
-        var report = ReportedTask.builder()
+        log.debug("task:{} status changed to {}.", tid, runStatus);
+        var report = ReportedRun.builder()
                 .id(tid)
-                .status(taskStatus)
+                .status(runStatus)
                 .ip(pod.getStatus().getPodIP())
                 .startTimeMillis(startTime)
                 .stopTimeMillis(null)
-                .generation(Util.getTaskGeneration(pod.getMetadata()))
                 .build();
-        taskReportReceiver.receive(List.of(report));
+        runReportReceiver.receive(report);
     }
 
     /**
@@ -163,12 +163,11 @@ public class PodEventHandler implements ResourceEventHandler<V1Pod> {
         }
         Long id = getJobNameAsId(pod);
         if (id != null) {
-            Collection<Task> optionalTasks = jobHolder.tasksOfIds(List.of(id));
-            if (CollectionUtils.isEmpty(optionalTasks)) {
+            Task task = jobHolder.taskWithId(id);
+            if (null == task) {
                 log.warn("no tasks found for pod {}", pod.getMetadata().getName());
                 return;
             }
-            Task task = optionalTasks.stream().findAny().get();
             taskLogSaver.saveLog(task);
         }
 

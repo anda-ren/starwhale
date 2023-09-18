@@ -62,7 +62,7 @@ import ai.starwhale.mlops.domain.user.po.UserEntity;
 import ai.starwhale.mlops.schedule.impl.container.TaskContainerSpecificationFinder;
 import ai.starwhale.mlops.schedule.impl.docker.ContainerTaskMapper;
 import ai.starwhale.mlops.schedule.impl.docker.DockerClientFinderSimpleImpl;
-import ai.starwhale.mlops.schedule.impl.docker.log.TaskLogCollectorFactoryDocker;
+import ai.starwhale.mlops.schedule.impl.docker.log.RunLogCollectorFactoryDocker;
 import ai.starwhale.mlops.schedule.impl.k8s.K8sClient;
 import ai.starwhale.mlops.schedule.impl.k8s.K8sJobTemplate;
 import ai.starwhale.mlops.schedule.impl.k8s.ResourceEventHolder;
@@ -99,7 +99,7 @@ import org.springframework.context.annotation.Import;
 @ImportAutoConfiguration(PageHelperAutoConfiguration.class)
 @Import({K8sJobTemplate.class, ResourceEventHolder.class, SimpleMeterRegistry.class,
         TaskContainerSpecificationFinder.class,
-        TaskLogCollectorFactoryDocker.class,
+        RunLogCollectorFactoryDocker.class,
         DockerClientFinderSimpleImpl.class,
         ContainerTaskMapper.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)

@@ -16,7 +16,7 @@
 
 package ai.starwhale.mlops.schedule.impl.docker;
 
-import ai.starwhale.mlops.domain.task.bo.Task;
+import ai.starwhale.mlops.domain.run.bo.Run;
 import cn.hutool.core.util.StrUtil;
 import com.github.dockerjava.api.model.Container;
 import java.util.List;
@@ -25,38 +25,37 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
 @Slf4j
-public class ContainerTaskMapper {
+public class ContainerRunMapper {
 
-    static final String CONTAINER_LABEL_RUN_ID = "starwhale-task-id";
-    public static final String CONTAINER_LABEL_GENERATION = "starwhale-generation";
+    static final String CONTAINER_LABEL_RUN_ID = "starwhale-run-id";
 
     final DockerClientFinder dockerClientFinder;
 
-    public ContainerTaskMapper(DockerClientFinder dockerClientFinder) {
+    public ContainerRunMapper(DockerClientFinder dockerClientFinder) {
         this.dockerClientFinder = dockerClientFinder;
     }
 
-    public String containerName(Task task) {
-        return String.format("starwhale-task-%d-%d", task.getId(), System.currentTimeMillis());
+    public String containerName(Run run) {
+        return String.format("starwhale-run-%d-%d", run.getId(), System.currentTimeMillis());
     }
 
-    public Container containerOfTask(Task task) {
-        List<Container> containers = dockerClientFinder.findProperDockerClient(task.getStep().getResourcePool())
+    public Container containerOfRun(Run run) {
+        List<Container> containers = dockerClientFinder.findProperDockerClient(run.getRunSpec().getResourcePool())
                 .listContainersCmd().withShowAll(true)
-                .withLabelFilter(Map.of(CONTAINER_LABEL_RUN_ID, task.getId().toString())).exec();
+                .withLabelFilter(Map.of(CONTAINER_LABEL_RUN_ID, run.getId().toString())).exec();
         if (CollectionUtils.isEmpty(containers)) {
             return null;
         }
         if (containers.size() > 1) {
-            log.warn("multiple containers found for task {}", task.getId());
+            log.warn("multiple containers found for run {}", run.getId());
         }
         return containers.get(0);
     }
 
-    public Long taskIfOfContainer(Container container) {
-        String taskId = container.getLabels().get(CONTAINER_LABEL_RUN_ID);
-        if (null != taskId && StrUtil.isNumeric(taskId)) {
-            return Long.valueOf(taskId);
+    public Long runIdfOfContainer(Container container) {
+        String runId = container.getLabels().get(CONTAINER_LABEL_RUN_ID);
+        if (null != runId && StrUtil.isNumeric(runId)) {
+            return Long.valueOf(runId);
         }
         return null;
     }

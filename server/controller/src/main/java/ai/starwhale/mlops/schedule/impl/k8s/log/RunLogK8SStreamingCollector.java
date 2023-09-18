@@ -17,7 +17,7 @@
 package ai.starwhale.mlops.schedule.impl.k8s.log;
 
 import ai.starwhale.mlops.schedule.impl.k8s.K8sClient;
-import ai.starwhale.mlops.schedule.log.TaskLogStreamingCollector;
+import ai.starwhale.mlops.schedule.log.RunLogStreamingCollector;
 import io.kubernetes.client.openapi.ApiException;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,7 +26,7 @@ import java.nio.charset.StandardCharsets;
 import okhttp3.Call;
 import okhttp3.Response;
 
-public class TaskLogK8sStreamingCollector implements TaskLogStreamingCollector {
+public class RunLogK8SStreamingCollector implements RunLogStreamingCollector {
 
     public static final String WORKER_CONTAINER = "worker";
     final K8sClient k8sClient;
@@ -34,7 +34,7 @@ public class TaskLogK8sStreamingCollector implements TaskLogStreamingCollector {
     final Response resp;
     final BufferedReader bufferedReader;
 
-    public TaskLogK8sStreamingCollector(K8sClient k8sClient, String jobName)
+    public RunLogK8SStreamingCollector(K8sClient k8sClient, String jobName)
             throws IOException, ApiException {
         this.k8sClient = k8sClient;
         call = k8sClient.readLog(getPodName(jobName), WORKER_CONTAINER, true);
@@ -42,10 +42,10 @@ public class TaskLogK8sStreamingCollector implements TaskLogStreamingCollector {
         bufferedReader = new BufferedReader(new InputStreamReader(resp.body().byteStream(), StandardCharsets.UTF_8));
     }
 
-    private String getPodName(String taskId) throws ApiException {
-        var podList = k8sClient.getPodsByJobName(taskId);
+    private String getPodName(String runId) throws ApiException {
+        var podList = k8sClient.getPodsByJobName(runId);
         if (podList.getItems().isEmpty()) {
-            throw new ApiException("get empty pod list by job name " + taskId);
+            throw new ApiException("get empty pod list by job name " + runId);
         }
         // returns the running pod
         var thePod = podList.getItems().stream().filter(pod -> {
@@ -58,7 +58,7 @@ public class TaskLogK8sStreamingCollector implements TaskLogStreamingCollector {
             return pod.getStatus().getPhase().equals("Running");
         }).findFirst();
         if (thePod.isEmpty()) {
-            throw new ApiException("get empty running pod by job name " + taskId);
+            throw new ApiException("get empty running pod by job name " + runId);
         }
         return thePod.get().getMetadata().getName();
     }

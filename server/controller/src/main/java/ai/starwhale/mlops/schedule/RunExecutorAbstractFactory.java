@@ -14,31 +14,20 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.domain.job.cache;
+package ai.starwhale.mlops.schedule;
 
-import ai.starwhale.mlops.domain.job.bo.Job;
-import ai.starwhale.mlops.domain.job.status.JobStatus;
-import ai.starwhale.mlops.domain.task.bo.Task;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
+
+import ai.starwhale.mlops.schedule.executor.RunExecutor;
+import ai.starwhale.mlops.schedule.log.RunLogCollectorFactory;
 
 /**
- * holds all the running jobs
+ * This interface produces a family of objects that are sufficient to implement the scheduler function
  */
-public interface HotJobHolder {
+public interface RunExecutorAbstractFactory {
 
-    void adopt(Job job);
+    RunExecutor buildRunExecutor();
 
-    Collection<Job> ofIds(Collection<Long> ids);
+    RunLogCollectorFactory buildTaskLogCollectorFactory();
 
-    Collection<Job> ofStatus(Set<JobStatus> jobStatuses);
 
-    Task taskWithId(Long taskId);
-
-    /**
-     * remove job in cache
-     *
-     */
-    void remove(Long jobId);
 }

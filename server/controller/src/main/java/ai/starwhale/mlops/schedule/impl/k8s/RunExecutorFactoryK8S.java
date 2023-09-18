@@ -16,11 +16,12 @@
 
 package ai.starwhale.mlops.schedule.impl.k8s;
 
-import ai.starwhale.mlops.schedule.SwSchedulerAbstractFactory;
+import ai.starwhale.mlops.schedule.RunExecutorAbstractFactory;
 import ai.starwhale.mlops.schedule.SwTaskScheduler;
+import ai.starwhale.mlops.schedule.executor.RunExecutor;
 import ai.starwhale.mlops.schedule.impl.container.TaskContainerSpecificationFinder;
-import ai.starwhale.mlops.schedule.impl.k8s.log.TaskLogK8sCollectorFactory;
-import ai.starwhale.mlops.schedule.log.TaskLogCollectorFactory;
+import ai.starwhale.mlops.schedule.impl.k8s.log.RunLogK8SCollectorFactory;
+import ai.starwhale.mlops.schedule.log.RunLogCollectorFactory;
 import ai.starwhale.mlops.storage.StorageAccessService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -30,7 +31,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 @Configuration
 @ConditionalOnProperty(value = "sw.scheduler.impl", havingValue = "k8s")
-public class SwSchedulerFactoryK8S implements SwSchedulerAbstractFactory {
+public class RunExecutorFactoryK8S implements RunExecutorAbstractFactory {
 
     final K8sClient k8sClient;
 
@@ -43,7 +44,7 @@ public class SwSchedulerFactoryK8S implements SwSchedulerAbstractFactory {
     final StorageAccessService storageAccessService;
     final ThreadPoolTaskScheduler cmdExecThreadPool;
 
-    public SwSchedulerFactoryK8S(
+    public RunExecutorFactoryK8S(
             K8sClient k8sClient,
             K8sJobTemplate k8sJobTemplate,
             TaskContainerSpecificationFinder taskContainerSpecificationFinder,
@@ -63,21 +64,14 @@ public class SwSchedulerFactoryK8S implements SwSchedulerAbstractFactory {
 
     @Bean
     @Override
-    public SwTaskScheduler buildSwTaskScheduler() {
-        return new K8sSwTaskScheduler(
-                k8sClient,
-                k8sJobTemplate,
-                taskContainerSpecificationFinder,
-                restartPolicy,
-                backoffLimit,
-                storageAccessService,
-                cmdExecThreadPool);
+    public RunExecutor buildRunExecutor() {
+        return new RunExecutorK8s(k8sClient, k8sJobTemplate, restartPolicy, backoffLimit, cmdExecThreadPool);
     }
 
     @Bean
     @Override
-    public TaskLogCollectorFactory buildTaskLogCollectorFactory() {
-        return new TaskLogK8sCollectorFactory(k8sClient, k8sJobTemplate);
+    public RunLogCollectorFactory buildTaskLogCollectorFactory() {
+        return new RunLogK8SCollectorFactory(k8sClient, k8sJobTemplate);
     }
 
 }

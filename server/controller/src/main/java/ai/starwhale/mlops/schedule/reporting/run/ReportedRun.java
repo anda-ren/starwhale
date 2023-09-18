@@ -14,26 +14,24 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.schedule.log;
+package ai.starwhale.mlops.schedule.reporting.run;
 
-import ai.starwhale.mlops.domain.task.bo.Task;
+import ai.starwhale.mlops.domain.run.bo.RunStatus;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-public interface TaskLogCollectorFactory {
+@Getter
+@AllArgsConstructor
+@EqualsAndHashCode
+@Builder
+public class ReportedRun {
 
-    /**
-     * collect the whole log of a task with the name of the execution
-     *
-     * @param task the target task
-     * @return a TaskLogOfflineCollector
-     */
-    TaskLogOfflineCollector offlineCollector(Task task);
-
-    /**
-     * return a streaming task log reader which could be closed at anytime
-     *
-     * @param task the target task
-     * @return a TaskLogStreamingCollector
-     */
-    TaskLogStreamingCollector streamingCollector(Task task);
-
+    Long id;
+    RunStatus status;
+    String ip;
+    Long startTimeMillis;
+    Long stopTimeMillis;
+    String failedReason;
 }

@@ -180,7 +180,7 @@ public class K8sSwTaskSchedulerTest {
                 .resultRootPath(new ResultPath("task"))
                 .uuid("uuid")
                 .status(TaskStatus.READY)
-                .generation(7L)
+                .currentRun(7L)
                 .taskRequest(TaskRequest.builder()
                         .index(1)
                         .total(1)

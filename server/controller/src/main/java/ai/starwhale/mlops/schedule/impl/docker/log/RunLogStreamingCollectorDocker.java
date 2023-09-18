@@ -16,10 +16,10 @@
 
 package ai.starwhale.mlops.schedule.impl.docker.log;
 
-import ai.starwhale.mlops.domain.task.bo.Task;
-import ai.starwhale.mlops.schedule.impl.docker.ContainerTaskMapper;
+import ai.starwhale.mlops.domain.run.bo.Run;
+import ai.starwhale.mlops.schedule.impl.docker.ContainerRunMapper;
 import ai.starwhale.mlops.schedule.impl.docker.DockerClientFinder;
-import ai.starwhale.mlops.schedule.log.TaskLogStreamingCollector;
+import ai.starwhale.mlops.schedule.log.RunLogStreamingCollector;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.LogContainerCmd;
@@ -34,13 +34,13 @@ import lombok.extern.slf4j.Slf4j;
 
 
 @Slf4j
-public class TaskLogStreamingCollectorDocker implements TaskLogStreamingCollector {
+public class RunLogStreamingCollectorDocker implements RunLogStreamingCollector {
 
     final DockerClient dockerClient;
 
     final DockerClientFinder dockerClientFinder;
 
-    final ContainerTaskMapper containerTaskMapper;
+    final ContainerRunMapper containerRunMapper;
 
     final BlockingQueue<String> logLines;
 
@@ -48,14 +48,15 @@ public class TaskLogStreamingCollectorDocker implements TaskLogStreamingCollecto
 
     Boolean closed = Boolean.FALSE;
 
-    public TaskLogStreamingCollectorDocker(Task task, DockerClientFinder dockerClientFinder,
-            ContainerTaskMapper containerTaskMapper) {
+    public RunLogStreamingCollectorDocker(
+            Run run, DockerClientFinder dockerClientFinder,
+            ContainerRunMapper containerRunMapper) {
         this.dockerClientFinder = dockerClientFinder;
-        this.dockerClient = this.dockerClientFinder.findProperDockerClient(task.getStep().getResourcePool());
-        this.containerTaskMapper = containerTaskMapper;
+        this.dockerClient = this.dockerClientFinder.findProperDockerClient(run.getRunSpec().getResourcePool());
+        this.containerRunMapper = containerRunMapper;
         this.logLines = new LinkedBlockingQueue<>();
         LogContainerCmd logContainerCmd = dockerClient.logContainerCmd(
-                        this.containerTaskMapper.containerOfTask(task).getId())
+                        this.containerRunMapper.containerOfRun(run).getId())
                 .withStdErr(true)
                 .withStdOut(true)
                 .withFollowStream(true);

@@ -80,7 +80,7 @@ import ai.starwhale.mlops.exception.api.StarwhaleApiException;
 import ai.starwhale.mlops.schedule.SwTaskScheduler;
 import ai.starwhale.mlops.schedule.impl.docker.ContainerTaskMapper;
 import ai.starwhale.mlops.schedule.impl.docker.DockerClientFinderSimpleImpl;
-import ai.starwhale.mlops.schedule.impl.docker.log.TaskLogCollectorFactoryDocker;
+import ai.starwhale.mlops.schedule.impl.docker.log.RunLogCollectorFactoryDocker;
 import ai.starwhale.mlops.schedule.impl.k8s.K8sClient;
 import ai.starwhale.mlops.schedule.impl.k8s.K8sJobTemplate;
 import ai.starwhale.mlops.schedule.impl.k8s.ResourceEventHolder;
@@ -147,7 +147,7 @@ import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 @Import({K8sJobTemplate.class, ResourceEventHolder.class, SimpleMeterRegistry.class, TaskLogSaver.class,
         DockerClientFinderSimpleImpl.class,
         ContainerTaskMapper.class,
-        TaskLogCollectorFactoryDocker.class})
+        RunLogCollectorFactoryDocker.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ModelServiceTest extends MySqlContainerHolder {
 

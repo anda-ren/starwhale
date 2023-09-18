@@ -14,19 +14,25 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.schedule;
+package ai.starwhale.mlops.domain.run.bo;
+
+import ai.starwhale.mlops.domain.runtime.RuntimeResource;
+import ai.starwhale.mlops.domain.system.resourcepool.bo.ResourcePool;
+import ai.starwhale.mlops.schedule.impl.container.ContainerCommand;
+import java.util.List;
+import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
 
 
-import ai.starwhale.mlops.schedule.log.TaskLogCollectorFactory;
+@Data
+@Builder
+public class RunSpec {
 
-/**
- * This interface produces a family of objects that are sufficient to implement the scheduler function
- */
-public interface SwSchedulerAbstractFactory {
-
-    SwTaskScheduler buildSwTaskScheduler();
-
-    TaskLogCollectorFactory buildTaskLogCollectorFactory();
-
+    private ContainerCommand command;
+    private String image;
+    private Map<String, String> envs;
+    private ResourcePool resourcePool;
+    private List<RuntimeResource> requestedResources;
 
 }

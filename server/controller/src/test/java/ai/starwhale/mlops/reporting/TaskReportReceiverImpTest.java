@@ -71,7 +71,7 @@ public class TaskReportReceiverImpTest {
 
     @Test
     public void testFreezeTask() {
-        when(jobHolder.tasksOfIds(List.of(1L))).thenReturn(Collections.emptySet());
+        when(jobHolder.taskWithId(List.of(1L))).thenReturn(Collections.emptySet());
         var expected = ReportedTask.builder()
                 .id(1L)
                 .status(TaskStatus.READY)
@@ -84,7 +84,7 @@ public class TaskReportReceiverImpTest {
     @Test
     public void testHotTask() {
         Task task = new Task();
-        when(jobHolder.tasksOfIds(List.of(1L))).thenReturn(Set.of(task));
+        when(jobHolder.taskWithId(List.of(1L))).thenReturn(Set.of(task));
         var expected = ReportedTask.builder()
                 .id(1L)
                 .status(TaskStatus.READY)
@@ -99,7 +99,7 @@ public class TaskReportReceiverImpTest {
     @Test
     public void testReportIgnoredByGeneration() {
         Task task = mock(WatchableTask.class);
-        when(jobHolder.tasksOfIds(List.of(1L))).thenReturn(Set.of(task));
+        when(jobHolder.taskWithId(List.of(1L))).thenReturn(Set.of(task));
         var report = ReportedTask.builder()
                 .id(1L)
                 .status(TaskStatus.READY)
@@ -114,12 +114,12 @@ public class TaskReportReceiverImpTest {
         // bigger generation in the in-memory task
         // the updateStatus will not be triggered
         reset(task);
-        when(task.getGeneration()).thenReturn(8L);
+        when(task.getCurrentRun()).thenReturn(8L);
         taskStatusReceiver.receive(List.of(report));
         verify(task, never()).updateStatus(any());
 
         reset(task);
-        when(task.getGeneration()).thenReturn(6L);
+        when(task.getCurrentRun()).thenReturn(6L);
         taskStatusReceiver.receive(List.of(report));
         verify(task, times(1)).updateStatus(any());
 
@@ -131,13 +131,13 @@ public class TaskReportReceiverImpTest {
                 .ip("127.0.0.1")
                 .build();
         reset(task);
-        when(task.getGeneration()).thenReturn(6L);
+        when(task.getCurrentRun()).thenReturn(6L);
         taskStatusReceiver.receive(List.of(report));
         verify(task, never()).updateStatus(any());
 
 
         reset(task);
-        when(task.getGeneration()).thenReturn(null);
+        when(task.getCurrentRun()).thenReturn(null);
         taskStatusReceiver.receive(List.of(report));
         verify(task, times(1)).updateStatus(any());
     }

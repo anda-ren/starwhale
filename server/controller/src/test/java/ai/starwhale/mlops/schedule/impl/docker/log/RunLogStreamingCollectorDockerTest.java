@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 
 
 @Slf4j
-public class TaskLogStreamingCollectorDockerTest {
+public class RunLogStreamingCollectorDockerTest {
 
     static final String IMAGE_HELLO_WORLD = "busybox:latest";
     static final String OUT_PUT_HELLO_WORLD = "hello\nworld";
@@ -47,7 +47,7 @@ public class TaskLogStreamingCollectorDockerTest {
     DockerClientFinder dockerClientFinder;
 
     LocalDockerTool localDockerTool = new LocalDockerTool();
-    TaskLogStreamingCollectorDocker logStreamingCollector;
+    RunLogStreamingCollectorDocker logStreamingCollector;
 
     @BeforeEach
     public void setup() {
@@ -72,7 +72,7 @@ public class TaskLogStreamingCollectorDockerTest {
 
         when(containerTaskMapper.containerOfTask(task)).thenReturn(container);
         when(containerTaskMapper.taskIfOfContainer(container)).thenReturn(1L);
-        logStreamingCollector = new TaskLogStreamingCollectorDocker(task, dockerClientFinder, containerTaskMapper);
+        logStreamingCollector = new RunLogStreamingCollectorDocker(task, dockerClientFinder, containerTaskMapper);
 
         // sleep for a while to wait for the log collector done,
         // and check if there is no bug in the log collector `close` signal

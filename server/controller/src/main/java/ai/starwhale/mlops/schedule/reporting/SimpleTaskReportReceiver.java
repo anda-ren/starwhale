@@ -24,14 +24,12 @@ import ai.starwhale.mlops.domain.task.mapper.TaskMapper;
 import ai.starwhale.mlops.domain.task.status.TaskStatus;
 import ai.starwhale.mlops.domain.upgrade.rollup.RollingUpdateStatusListener;
 import ai.starwhale.mlops.schedule.SwTaskScheduler;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -71,12 +69,7 @@ public class SimpleTaskReportReceiver implements TaskReportReceiver, RollingUpda
                 taskMapper.updateFailedReason(reportedTask.getId(), reportedTask.getFailedReason());
             }
 
-            Collection<Task> optionalTasks = jobHolder.tasksOfIds(List.of(reportedTask.getId()));
-            Task inMemoryTask = null;
-            if (!CollectionUtils.isEmpty(optionalTasks)) {
-                inMemoryTask = optionalTasks.iterator().next();
-            }
-
+            Task inMemoryTask = jobHolder.taskWithId(reportedTask.getId());
             if (inMemoryTask == null) {
                 Job job = jobBoConverter.fromTaskId(reportedTask.getId());
                 if (null == job) {
@@ -106,14 +99,14 @@ public class SimpleTaskReportReceiver implements TaskReportReceiver, RollingUpda
                 return;
             }
             // prevent all the task status update before the task resume
-            if (inMemoryTask.getGeneration() != null) {
+            if (inMemoryTask.getCurrentRun() != null) {
                 if (reportedTask.getGeneration() == null) {
                     log.debug("no generation from report {}, ignore", reportedTask.getId());
                     return;
                 }
-                if (reportedTask.getGeneration() < inMemoryTask.getGeneration()) {
+                if (reportedTask.getGeneration() < inMemoryTask.getCurrentRun().getId()) {
                     log.debug("generation from report {} {} is less than cached generation {}, ignore",
-                            reportedTask.getId(), reportedTask.getGeneration(), inMemoryTask.getGeneration());
+                            reportedTask.getId(), reportedTask.getGeneration(), inMemoryTask.getCurrentRun());
                     return;
                 }
             }

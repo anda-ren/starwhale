@@ -16,12 +16,13 @@
 
 package ai.starwhale.mlops.schedule.impl.docker;
 
-import ai.starwhale.mlops.schedule.SwSchedulerAbstractFactory;
+import ai.starwhale.mlops.schedule.RunExecutorAbstractFactory;
 import ai.starwhale.mlops.schedule.SwTaskScheduler;
+import ai.starwhale.mlops.schedule.executor.RunExecutor;
 import ai.starwhale.mlops.schedule.impl.container.TaskContainerSpecificationFinder;
-import ai.starwhale.mlops.schedule.impl.docker.log.TaskLogCollectorFactoryDocker;
+import ai.starwhale.mlops.schedule.impl.docker.log.RunLogCollectorFactoryDocker;
 import ai.starwhale.mlops.schedule.impl.docker.reporting.DockerTaskReporter;
-import ai.starwhale.mlops.schedule.log.TaskLogCollectorFactory;
+import ai.starwhale.mlops.schedule.log.RunLogCollectorFactory;
 import java.util.concurrent.Executors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -31,11 +32,11 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConditionalOnProperty(value = "sw.scheduler.impl", havingValue = "docker")
-public class SwSchedulerFactoryDocker implements SwSchedulerAbstractFactory {
+public class RunExecutorFactoryDocker implements RunExecutorAbstractFactory {
 
     final DockerClientFinder dockerClientFinder;
 
-    final ContainerTaskMapper containerTaskMapper;
+    final ContainerRunMapper containerRunMapper;
 
     final DockerTaskReporter dockerTaskReporter;
 
@@ -44,14 +45,14 @@ public class SwSchedulerFactoryDocker implements SwSchedulerAbstractFactory {
     final String network;
     final String nodeIp;
 
-    public SwSchedulerFactoryDocker(DockerClientFinder dockerClientFinder, ContainerTaskMapper containerTaskMapper,
-            DockerTaskReporter dockerTaskReporter,
-            TaskContainerSpecificationFinder taskContainerSpecificationFinder,
-            @Value("${sw.scheduler.docker.network}") String network,
-            @Value("${sw.scheduler.docker.node-ip}") String nodeIp
+    public RunExecutorFactoryDocker(DockerClientFinder dockerClientFinder, ContainerRunMapper containerRunMapper,
+                                    DockerTaskReporter dockerTaskReporter,
+                                    TaskContainerSpecificationFinder taskContainerSpecificationFinder,
+                                    @Value("${sw.scheduler.docker.network}") String network,
+                                    @Value("${sw.scheduler.docker.node-ip}") String nodeIp
     ) {
         this.dockerClientFinder = dockerClientFinder;
-        this.containerTaskMapper = containerTaskMapper;
+        this.containerRunMapper = containerRunMapper;
         this.dockerTaskReporter = dockerTaskReporter;
         this.taskContainerSpecificationFinder = taskContainerSpecificationFinder;
         this.network = network;
@@ -60,16 +61,21 @@ public class SwSchedulerFactoryDocker implements SwSchedulerAbstractFactory {
 
     @Bean
     @Override
-    public SwTaskScheduler buildSwTaskScheduler() {
-        return new SwTaskSchedulerDocker(dockerClientFinder, containerTaskMapper, dockerTaskReporter,
-                Executors.newCachedThreadPool(), taskContainerSpecificationFinder, network,
-                nodeIp, new HostResourceConfigBuilder());
+    public RunExecutor buildRunExecutor() {
+        return new RunExecutorDockerImpl(
+                dockerClientFinder,
+                new HostResourceConfigBuilder(),
+                Executors.newCachedThreadPool(),
+                containerRunMapper,
+                nodeIp,
+                network
+        );
     }
 
     @Bean
     @Override
-    public TaskLogCollectorFactory buildTaskLogCollectorFactory() {
-        return new TaskLogCollectorFactoryDocker(dockerClientFinder, containerTaskMapper);
+    public RunLogCollectorFactory buildTaskLogCollectorFactory() {
+        return new RunLogCollectorFactoryDocker(dockerClientFinder, containerRunMapper);
     }
 
 

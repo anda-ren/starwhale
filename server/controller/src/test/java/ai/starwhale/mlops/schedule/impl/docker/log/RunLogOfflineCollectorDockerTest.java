@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
 
 
 @Slf4j
-public class TaskLogOfflineCollectorDockerTest {
+public class RunLogOfflineCollectorDockerTest {
 
     static final String IMAGE_HELLO_WORLD = "hello-world:linux";
     static final String OUT_PUT_HELLO_WORLD = "STDOUT: \n"
@@ -66,7 +66,7 @@ public class TaskLogOfflineCollectorDockerTest {
     DockerClient dockerClient;
     LocalDockerTool localDockerTool = new LocalDockerTool();
     DockerClientFinder dockerClientFinder;
-    TaskLogOfflineCollectorDocker logOfflineCollectorDocker;
+    RunLogOfflineCollectorDocker logOfflineCollectorDocker;
 
     @BeforeEach
     public void setup() {
@@ -81,7 +81,7 @@ public class TaskLogOfflineCollectorDockerTest {
         when(container.getNames()).thenReturn(new String[]{containerName});
         when(containerTaskMapper.containerOfTask(task)).thenReturn(container);
         when(containerTaskMapper.taskIfOfContainer(container)).thenReturn(1L);
-        logOfflineCollectorDocker = new TaskLogOfflineCollectorDocker(task, dockerClientFinder, containerTaskMapper);
+        logOfflineCollectorDocker = new RunLogOfflineCollectorDocker(task, dockerClientFinder, containerTaskMapper);
     }
 
     @Test

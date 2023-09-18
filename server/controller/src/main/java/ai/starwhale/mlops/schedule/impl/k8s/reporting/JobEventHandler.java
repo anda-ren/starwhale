@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.schedule.impl.k8s;
+package ai.starwhale.mlops.schedule.impl.k8s.reporting;
 
-import ai.starwhale.mlops.domain.task.status.TaskStatus;
+import ai.starwhale.mlops.domain.run.bo.RunStatus;
 import ai.starwhale.mlops.domain.task.status.TaskStatusMachine;
-import ai.starwhale.mlops.schedule.reporting.ReportedTask;
-import ai.starwhale.mlops.schedule.reporting.TaskReportReceiver;
+import ai.starwhale.mlops.schedule.impl.k8s.K8sClient;
+import ai.starwhale.mlops.schedule.impl.k8s.Util;
+import ai.starwhale.mlops.schedule.reporting.run.ReportedRun;
+import ai.starwhale.mlops.schedule.reporting.run.RunReportReceiver;
 import io.kubernetes.client.informer.ResourceEventHandler;
 import io.kubernetes.client.openapi.models.V1Job;
 import io.kubernetes.client.openapi.models.V1JobCondition;
@@ -39,16 +41,13 @@ import org.springframework.util.StringUtils;
 @ConditionalOnProperty(value = "sw.scheduler.impl", havingValue = "k8s")
 public class JobEventHandler implements ResourceEventHandler<V1Job> {
 
-    private final TaskReportReceiver taskReportReceiver;
-    private final TaskStatusMachine taskStatusMachine;
+    private final RunReportReceiver runReportReceiver;
     private final K8sClient k8sClient;
 
     public JobEventHandler(
-            TaskReportReceiver taskReportReceiver,
-            TaskStatusMachine taskStatusMachine,
+            RunReportReceiver runReportReceiver,
             K8sClient k8sClient) {
-        this.taskReportReceiver = taskReportReceiver;
-        this.taskStatusMachine = taskStatusMachine;
+        this.runReportReceiver = runReportReceiver;
         this.k8sClient = k8sClient;
     }
 
@@ -85,7 +84,7 @@ public class JobEventHandler implements ResourceEventHandler<V1Job> {
         var jobName = jobName(job);
         Long stopTime = null;
         String jobFailedReason = null;
-        TaskStatus taskStatus = TaskStatus.UNKNOWN;
+        RunStatus runStatus = null;
         // https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#jobstatus-v1-batch
         //  The latest available observations of an object's current state.
         //  When a Job fails, one of the conditions will have type "Failed" and status true.
@@ -107,12 +106,12 @@ public class JobEventHandler implements ResourceEventHandler<V1Job> {
                 var condition = collect.get(0);
                 String type = condition.getType();
                 if ("Failed".equalsIgnoreCase(type)) {
-                    taskStatus = TaskStatus.FAIL;
+                    runStatus = RunStatus.FAILED;
                     stopTime = Util.k8sTimeToMs(condition.getLastTransitionTime());
                     log.debug("job status changed for {} is failed {}", jobName, status);
                     jobFailedReason = joinReasons(condition.getReason(), condition.getMessage());
                 } else if ("Complete".equalsIgnoreCase(type)) {
-                    taskStatus = TaskStatus.SUCCESS;
+                    runStatus = RunStatus.FINISHED;
                     stopTime = Util.k8sTimeToMs(condition.getLastTransitionTime());
                 } else if ("Suspended".equalsIgnoreCase(type)) {
                     log.warn("unexpected task status detected {}", type);
@@ -122,13 +121,14 @@ public class JobEventHandler implements ResourceEventHandler<V1Job> {
             }
         }
 
-        // we assume that the job is cancelled if it is not failed when delete
-        if (taskStatus != TaskStatus.SUCCESS && taskStatus != TaskStatus.FAIL && onDelete) {
-            taskStatus = TaskStatus.CANCELED;
+        if(null == runStatus){
+            log.info("run status is not either success or fail {}", jobName);
+            return;
         }
 
+
         Long startTime = null;
-        if (taskStatusMachine.isFinal(taskStatus)) {
+        if (runStatus == RunStatus.FINISHED || runStatus == RunStatus.FAILED) {
             startTime = getPodStartTime(jobName);
             if (startTime == null) {
                 log.warn("no pod start time found for job {}, use now", jobName);
@@ -151,18 +151,14 @@ public class JobEventHandler implements ResourceEventHandler<V1Job> {
             failedReason = failedReason + "\npod failed: " + podFailedReason;
         }
 
-        // retry number here is not reliable, it only counts failed pods that is not deleted
-        Integer retryNum = null != status.getFailed() ? status.getFailed() : 0;
-        var report = ReportedTask.builder()
+        var report = ReportedRun.builder()
                 .id(Long.parseLong(jobName))
-                .status(taskStatus)
+                .status(runStatus)
                 .startTimeMillis(startTime)
                 .stopTimeMillis(stopTime)
-                .retryCount(retryNum)
-                .generation(Util.getTaskGeneration(job.getMetadata()))
                 .failedReason(StringUtils.hasText(failedReason) ? failedReason : null)
                 .build();
-        taskReportReceiver.receive(List.of(report));
+        runReportReceiver.receive(report);
     }
 
     private String conditionsLogString(List<V1JobCondition> conditions) {

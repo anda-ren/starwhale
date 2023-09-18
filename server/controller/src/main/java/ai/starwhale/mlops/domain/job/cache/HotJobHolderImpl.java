@@ -25,6 +25,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -68,11 +69,8 @@ public class HotJobHolderImpl implements HotJobHolder {
                 .collect(Collectors.toList());
     }
 
-    public Collection<Task> tasksOfIds(Collection<Long> taskIds) {
-        return taskIds.stream()
-                .map(id -> taskMap.get(id))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+    public Task taskWithId(Long taskId) {
+        return taskMap.get(taskId);
     }
 
     /**

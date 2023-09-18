@@ -24,8 +24,8 @@ import static org.mockito.Mockito.when;
 import ai.starwhale.mlops.common.IdConverter;
 import ai.starwhale.mlops.domain.job.step.bo.Step;
 import ai.starwhale.mlops.domain.task.bo.Task;
-import ai.starwhale.mlops.schedule.impl.k8s.log.TaskLogK8sStreamingCollector;
-import ai.starwhale.mlops.schedule.log.TaskLogCollectorFactory;
+import ai.starwhale.mlops.schedule.impl.k8s.log.RunLogK8SStreamingCollector;
+import ai.starwhale.mlops.schedule.log.RunLogCollectorFactory;
 import io.kubernetes.client.openapi.ApiException;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
 
 public class TaskLogWsServerTest {
 
-    private TaskLogK8sStreamingCollector logK8sCollector;
+    private RunLogK8SStreamingCollector logK8sCollector;
     private IdConverter idConvertor;
     private Session session;
 
@@ -43,14 +43,14 @@ public class TaskLogWsServerTest {
     public void setup() {
         idConvertor = mock(IdConverter.class);
         session = mock(Session.class);
-        logK8sCollector = mock(TaskLogK8sStreamingCollector.class);
+        logK8sCollector = mock(RunLogK8SStreamingCollector.class);
     }
 
     @Test
     public void testOpen() throws IOException, ApiException, InterruptedException {
         var server = new TaskLogWsServer();
         server.setIdConvertor(idConvertor);
-        TaskLogCollectorFactory logCollectorFactory = mock(TaskLogCollectorFactory.class);
+        RunLogCollectorFactory logCollectorFactory = mock(RunLogCollectorFactory.class);
         when(logCollectorFactory.streamingCollector(any())).thenReturn(logK8sCollector);
         server.setTaskLogCollectorFactory(logCollectorFactory);
 

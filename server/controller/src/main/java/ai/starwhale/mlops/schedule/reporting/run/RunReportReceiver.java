@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.schedule.log;
+package ai.starwhale.mlops.schedule.reporting.run;
 
-import io.vavr.Tuple2;
+public interface RunReportReceiver {
 
-public interface TaskLogOfflineCollector {
-
-    Tuple2<String, String> collect();
-
+    void receive(ReportedRun reportedRun);
 }

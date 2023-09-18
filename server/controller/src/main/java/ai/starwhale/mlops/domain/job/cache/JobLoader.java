@@ -87,7 +87,7 @@ public class JobLoader {
                     // FAIL -> ready is forbidden by status machine, so make it to CREATED at first
                     ((WatchableTask) t).unwrap().updateStatus(TaskStatus.CREATED);
                     t.updateStatus(TaskStatus.READY);
-                    t.setGeneration(System.currentTimeMillis());
+                    t.setCurrentRun(System.currentTimeMillis());
                 });
     }
 

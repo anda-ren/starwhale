@@ -14,31 +14,13 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.domain.job.cache;
+package ai.starwhale.mlops.schedule.log;
 
-import ai.starwhale.mlops.domain.job.bo.Job;
-import ai.starwhale.mlops.domain.job.status.JobStatus;
-import ai.starwhale.mlops.domain.task.bo.Task;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
+import java.io.IOException;
 
-/**
- * holds all the running jobs
- */
-public interface HotJobHolder {
+public interface RunLogStreamingCollector {
 
-    void adopt(Job job);
+    String readLine(Long waitTimeSeconds) throws IOException;
 
-    Collection<Job> ofIds(Collection<Long> ids);
-
-    Collection<Job> ofStatus(Set<JobStatus> jobStatuses);
-
-    Task taskWithId(Long taskId);
-
-    /**
-     * remove job in cache
-     *
-     */
-    void remove(Long jobId);
+    void cancel();
 }

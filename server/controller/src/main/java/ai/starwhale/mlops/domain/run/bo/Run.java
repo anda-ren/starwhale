@@ -14,31 +14,20 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.domain.job.cache;
+package ai.starwhale.mlops.domain.run.bo;
 
-import ai.starwhale.mlops.domain.job.bo.Job;
-import ai.starwhale.mlops.domain.job.status.JobStatus;
-import ai.starwhale.mlops.domain.task.bo.Task;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
+import lombok.Builder;
+import lombok.Data;
 
-/**
- * holds all the running jobs
- */
-public interface HotJobHolder {
+@Data
+@Builder
+public class Run {
+    private Long id;
+    private Long taskId;
+    private String ip;
+    private Long startTime;
+    private Long finishTime;
+    private RunStatus runStatus;
+    private RunSpec runSpec;
 
-    void adopt(Job job);
-
-    Collection<Job> ofIds(Collection<Long> ids);
-
-    Collection<Job> ofStatus(Set<JobStatus> jobStatuses);
-
-    Task taskWithId(Long taskId);
-
-    /**
-     * remove job in cache
-     *
-     */
-    void remove(Long jobId);
 }

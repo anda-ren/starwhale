@@ -90,7 +90,7 @@ public class JobLoaderTest {
         verify(failedTask, times(mockJob.getSteps().size())).updateStatus(TaskStatus.READY);
         verify(jobHolder).adopt(mockJob);
         mockJob.getSteps().get(0).getTasks().forEach(t -> {
-            assertNotNull(t.getGeneration());
+            assertNotNull(t.getCurrentRun());
         });
     }
 }

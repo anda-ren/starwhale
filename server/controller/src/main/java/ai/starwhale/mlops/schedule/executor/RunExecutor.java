@@ -14,31 +14,19 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.domain.job.cache;
+package ai.starwhale.mlops.schedule.executor;
 
-import ai.starwhale.mlops.domain.job.bo.Job;
-import ai.starwhale.mlops.domain.job.status.JobStatus;
-import ai.starwhale.mlops.domain.task.bo.Task;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
+import ai.starwhale.mlops.domain.run.bo.Run;
+import ai.starwhale.mlops.schedule.reporting.run.RunReportReceiver;
+import java.util.concurrent.Future;
 
-/**
- * holds all the running jobs
- */
-public interface HotJobHolder {
+public interface RunExecutor {
 
-    void adopt(Job job);
+    void run(Run run, RunReportReceiver reportReceiver);
 
-    Collection<Job> ofIds(Collection<Long> ids);
+    void stop(Run run);
 
-    Collection<Job> ofStatus(Set<JobStatus> jobStatuses);
+    void remove(Run run);
 
-    Task taskWithId(Long taskId);
-
-    /**
-     * remove job in cache
-     *
-     */
-    void remove(Long jobId);
+    Future<String[]> exec(Run run, String... command);
 }

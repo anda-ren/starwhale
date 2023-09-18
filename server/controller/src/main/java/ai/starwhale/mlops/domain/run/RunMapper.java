@@ -14,13 +14,19 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.schedule.log;
+package ai.starwhale.mlops.domain.run;
 
-import java.io.IOException;
+import java.util.List;
 
-public interface TaskLogStreamingCollector {
+public interface RunMapper {
 
-    String readLine(Long waitTimeSeconds) throws IOException;
+    List<RunEntity> list(Long taskId);
 
-    void cancel();
+    RunEntity get(Long id);
+
+    void insert(RunEntity runEntity);
+
+    void update(RunEntity runEntity);
+
+    void delete(Long id);
 }

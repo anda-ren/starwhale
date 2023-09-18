@@ -16,43 +16,44 @@
 
 package ai.starwhale.mlops.schedule.impl.k8s.log;
 
+import ai.starwhale.mlops.domain.run.bo.Run;
 import ai.starwhale.mlops.domain.task.bo.Task;
 import ai.starwhale.mlops.exception.StarwhaleException;
 import ai.starwhale.mlops.exception.SwProcessException;
 import ai.starwhale.mlops.exception.SwProcessException.ErrorType;
 import ai.starwhale.mlops.schedule.impl.k8s.K8sClient;
 import ai.starwhale.mlops.schedule.impl.k8s.K8sJobTemplate;
-import ai.starwhale.mlops.schedule.log.TaskLogCollectorFactory;
-import ai.starwhale.mlops.schedule.log.TaskLogOfflineCollector;
-import ai.starwhale.mlops.schedule.log.TaskLogStreamingCollector;
+import ai.starwhale.mlops.schedule.log.RunLogCollectorFactory;
+import ai.starwhale.mlops.schedule.log.RunLogOfflineCollector;
+import ai.starwhale.mlops.schedule.log.RunLogStreamingCollector;
 import io.kubernetes.client.openapi.ApiException;
 import java.io.IOException;
 import java.text.MessageFormat;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TaskLogK8sCollectorFactory implements TaskLogCollectorFactory {
+public class RunLogK8SCollectorFactory implements RunLogCollectorFactory {
 
     final K8sClient k8sClient;
 
     final K8sJobTemplate k8sJobTemplate;
 
-    public TaskLogK8sCollectorFactory(K8sClient k8sClient, K8sJobTemplate k8sJobTemplate) {
+    public RunLogK8SCollectorFactory(K8sClient k8sClient, K8sJobTemplate k8sJobTemplate) {
         this.k8sClient = k8sClient;
         this.k8sJobTemplate = k8sJobTemplate;
     }
 
 
     @Override
-    public TaskLogOfflineCollector offlineCollector(Task task) throws StarwhaleException {
-        return new TaskLogOfflineCollectorK8s(k8sClient, k8sJobTemplate.getJobContainerNames(
-                k8sJobTemplate.loadJobTemplate()), task);
+    public RunLogOfflineCollector offlineCollector(Run run) throws StarwhaleException {
+        return new RunLogOfflineCollectorK8S(k8sClient, k8sJobTemplate.getJobContainerNames(
+                k8sJobTemplate.loadJobTemplate()), run);
     }
 
     @Override
-    public TaskLogStreamingCollector streamingCollector(Task task) throws StarwhaleException {
+    public RunLogStreamingCollector streamingCollector(Run run) throws StarwhaleException {
         try {
-            return new TaskLogK8sStreamingCollector(this.k8sClient, String.valueOf(task.getId()));
+            return new RunLogK8SStreamingCollector(this.k8sClient, String.valueOf(run.getId()));
         } catch (IOException e) {
             throw new SwProcessException(ErrorType.NETWORK,
                     MessageFormat.format("read k8s api exception {0}", e.getMessage()),

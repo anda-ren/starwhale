@@ -16,10 +16,11 @@
 
 package ai.starwhale.mlops.schedule.impl.docker.log;
 
-import ai.starwhale.mlops.domain.task.bo.Task;
+import ai.starwhale.mlops.domain.run.bo.Run;
+import ai.starwhale.mlops.schedule.impl.docker.ContainerRunMapper;
 import ai.starwhale.mlops.schedule.impl.docker.ContainerTaskMapper;
 import ai.starwhale.mlops.schedule.impl.docker.DockerClientFinder;
-import ai.starwhale.mlops.schedule.log.TaskLogOfflineCollector;
+import ai.starwhale.mlops.schedule.log.RunLogOfflineCollector;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.LogContainerCmd;
@@ -29,33 +30,35 @@ import io.vavr.Tuple2;
 import java.io.Closeable;
 import java.io.IOException;
 
-public class TaskLogOfflineCollectorDocker implements TaskLogOfflineCollector {
+public class RunLogOfflineCollectorDocker implements RunLogOfflineCollector {
 
-    final Task task;
+    final Run run;
 
     final DockerClient dockerClient;
 
     final DockerClientFinder dockerClientFinder;
 
-    final ContainerTaskMapper containerTaskMapper;
+    final ContainerRunMapper containerRunMapper;
 
     final Object lock = new Object();
 
     StringBuffer logBuffer = new StringBuffer();
 
 
-    public TaskLogOfflineCollectorDocker(Task task, DockerClientFinder dockerClientFinder,
-            ContainerTaskMapper containerTaskMapper) {
-        this.task = task;
+    public RunLogOfflineCollectorDocker(
+            Run run, DockerClientFinder dockerClientFinder,
+            ContainerRunMapper containerRunMapper
+    ) {
+        this.run = run;
         this.dockerClientFinder = dockerClientFinder;
-        this.dockerClient = this.dockerClientFinder.findProperDockerClient(task.getStep().getResourcePool());
-        this.containerTaskMapper = containerTaskMapper;
+        this.dockerClient = this.dockerClientFinder.findProperDockerClient(this.run.getRunSpec().getResourcePool());
+        this.containerRunMapper = containerRunMapper;
     }
 
     @Override
     public Tuple2<String, String> collect() {
         logBuffer = new StringBuffer();
-        Container container = this.containerTaskMapper.containerOfTask(task);
+        Container container = this.containerRunMapper.containerOfRun(run);
         if (null == container) {
             return null;
         }

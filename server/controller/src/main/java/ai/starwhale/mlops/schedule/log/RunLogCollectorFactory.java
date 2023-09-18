@@ -14,31 +14,26 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.domain.job.cache;
+package ai.starwhale.mlops.schedule.log;
 
-import ai.starwhale.mlops.domain.job.bo.Job;
-import ai.starwhale.mlops.domain.job.status.JobStatus;
-import ai.starwhale.mlops.domain.task.bo.Task;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
+import ai.starwhale.mlops.domain.run.bo.Run;
 
-/**
- * holds all the running jobs
- */
-public interface HotJobHolder {
-
-    void adopt(Job job);
-
-    Collection<Job> ofIds(Collection<Long> ids);
-
-    Collection<Job> ofStatus(Set<JobStatus> jobStatuses);
-
-    Task taskWithId(Long taskId);
+public interface RunLogCollectorFactory {
 
     /**
-     * remove job in cache
+     * collect the whole log of a task with the name of the execution
      *
+     * @param run the target run
+     * @return a RunLogOfflineCollector
      */
-    void remove(Long jobId);
+    RunLogOfflineCollector offlineCollector(Run run);
+
+    /**
+     * return a streaming task log reader which could be closed at anytime
+     *
+     * @param run the target run
+     * @return a RunLogStreamingCollector
+     */
+    RunLogStreamingCollector streamingCollector(Run run);
+
 }

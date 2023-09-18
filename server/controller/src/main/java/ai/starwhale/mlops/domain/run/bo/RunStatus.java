@@ -14,31 +14,11 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.domain.job.cache;
+package ai.starwhale.mlops.domain.run.bo;
 
-import ai.starwhale.mlops.domain.job.bo.Job;
-import ai.starwhale.mlops.domain.job.status.JobStatus;
-import ai.starwhale.mlops.domain.task.bo.Task;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
-
-/**
- * holds all the running jobs
- */
-public interface HotJobHolder {
-
-    void adopt(Job job);
-
-    Collection<Job> ofIds(Collection<Long> ids);
-
-    Collection<Job> ofStatus(Set<JobStatus> jobStatuses);
-
-    Task taskWithId(Long taskId);
-
-    /**
-     * remove job in cache
-     *
-     */
-    void remove(Long jobId);
+public enum RunStatus {
+    PENDING,
+    RUNNING,
+    FINISHED,
+    FAILED
 }

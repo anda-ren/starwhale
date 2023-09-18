@@ -16,13 +16,13 @@
 
 package ai.starwhale.mlops.schedule.impl.k8s.log;
 
-import ai.starwhale.mlops.domain.task.bo.Task;
+import ai.starwhale.mlops.domain.run.bo.Run;
 import ai.starwhale.mlops.exception.StarwhaleException;
 import ai.starwhale.mlops.exception.SwProcessException;
 import ai.starwhale.mlops.exception.SwProcessException.ErrorType;
 import ai.starwhale.mlops.schedule.impl.k8s.K8sClient;
 import ai.starwhale.mlops.schedule.impl.k8s.K8sJobTemplate;
-import ai.starwhale.mlops.schedule.log.TaskLogOfflineCollector;
+import ai.starwhale.mlops.schedule.log.RunLogOfflineCollector;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.vavr.Tuple2;
@@ -33,28 +33,28 @@ import lombok.extern.slf4j.Slf4j;
 
 
 @Slf4j
-public class TaskLogOfflineCollectorK8s implements TaskLogOfflineCollector {
+public class RunLogOfflineCollectorK8S implements RunLogOfflineCollector {
 
     final K8sClient k8sClient;
 
     final List<String> containers;
 
-    final Task task;
+    final Run run;
 
-    public TaskLogOfflineCollectorK8s(K8sClient k8sClient, List<String> containers, Task task) {
+    public RunLogOfflineCollectorK8S(K8sClient k8sClient, List<String> containers, Run run) {
         this.k8sClient = k8sClient;
         this.containers = containers;
-        this.task = task;
+        this.run = run;
     }
 
     @Override
     public Tuple2<String, String> collect() throws StarwhaleException {
-        log.debug("logging for task {} begins...", task.getId());
+        log.debug("logging for task {} begins...", run.getId());
         try {
             V1Pod v1Pod = k8sClient.podOfJob(K8sClient.toV1LabelSelector(Map.of(
-                    K8sJobTemplate.JOB_IDENTITY_LABEL, task.getId().toString())));
+                    K8sJobTemplate.JOB_IDENTITY_LABEL, run.getId().toString())));
             if (null == v1Pod) {
-                log.error("pod not exists for task {}", task.getId());
+                log.error("pod not exists for task {}", run.getId());
                 return null;
             }
             String logName = v1Pod.getMetadata().getName();

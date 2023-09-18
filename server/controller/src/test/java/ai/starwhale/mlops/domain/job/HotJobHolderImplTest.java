@@ -57,7 +57,7 @@ public class HotJobHolderImplTest {
         Assertions.assertEquals(1, jobs1.size());
         Assertions.assertTrue(jobs1.contains(job1));
 
-        Collection<Task> tasks = hotJobHolder.tasksOfIds(
+        Collection<Task> tasks = hotJobHolder.taskWithId(
                 List.of(1L, 4L, 5L, 7L, 11L, 12L, 13L, 14L, 15L));
         Assertions.assertEquals(5, tasks.size());
 
@@ -71,7 +71,7 @@ public class HotJobHolderImplTest {
         jobs1 = hotJobHolder.ofStatus(Set.of(JobStatus.CANCELLING));
         Assertions.assertEquals(0, jobs1.size());
 
-        tasks = hotJobHolder.tasksOfIds(
+        tasks = hotJobHolder.taskWithId(
                 List.of(1L, 4L, 5L, 7L, 11L, 12L, 13L, 14L, 15L));
         Assertions.assertEquals(3, tasks.size());
 
