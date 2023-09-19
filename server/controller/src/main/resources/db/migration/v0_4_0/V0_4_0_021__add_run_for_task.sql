@@ -14,9 +14,19 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.schedule.reporting.run;
 
-public interface RunReportReceiver {
-
-    void receive(ReportedRun reportedRun);
-}
+create table run
+(
+    `id`            bigint auto_increment primary key,
+    `task_id`       bigint       not null,
+    `status`        varchar(30),
+    `log_path`      varchar(255) not null,
+    `run_spec`      text         not null,
+    `ip`            varchar(255),
+    `failed_reason` text,
+    `start_time`    datetime,
+    `finish_time`   datetime,
+    `created_time`  datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `modified_time` datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX           `idx_run_task` (`task_id`) USING BTREE
+);

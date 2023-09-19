@@ -52,7 +52,7 @@ public class ContainerTaskMapperTest {
             Task task = Task.builder().id(1L).step(new Step()).build();
             Container container = cm.containerOfTask(task);
             Assertions.assertEquals("/" + containerName, container.getNames()[0]);
-            Assertions.assertEquals(1L, cm.taskIfOfContainer(container));
+            Assertions.assertEquals(1L, cm.runIdOfContainer(container));
         }
 
 

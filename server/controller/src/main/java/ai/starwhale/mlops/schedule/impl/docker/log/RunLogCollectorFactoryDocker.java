@@ -19,7 +19,6 @@ package ai.starwhale.mlops.schedule.impl.docker.log;
 import ai.starwhale.mlops.domain.run.bo.Run;
 import ai.starwhale.mlops.exception.StarwhaleException;
 import ai.starwhale.mlops.schedule.impl.docker.ContainerRunMapper;
-import ai.starwhale.mlops.schedule.impl.docker.ContainerTaskMapper;
 import ai.starwhale.mlops.schedule.impl.docker.DockerClientFinder;
 import ai.starwhale.mlops.schedule.log.RunLogCollectorFactory;
 import ai.starwhale.mlops.schedule.log.RunLogOfflineCollector;

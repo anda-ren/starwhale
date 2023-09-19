@@ -16,6 +16,7 @@
 
 package ai.starwhale.mlops.schedule.log;
 
+import ai.starwhale.mlops.domain.run.bo.Run;
 import ai.starwhale.mlops.domain.task.bo.Task;
 import ai.starwhale.mlops.exception.StarwhaleException;
 import ai.starwhale.mlops.exception.SwProcessException;
@@ -30,28 +31,28 @@ import org.springframework.util.StringUtils;
 
 @Slf4j
 @Service
-public class TaskLogSaver {
+public class RunLogSaver {
 
     final RunLogCollectorFactory runLogCollectorFactory;
 
     final StorageAccessService storageService;
 
-    public TaskLogSaver(RunLogCollectorFactory runLogCollectorFactory, StorageAccessService storageService) {
+    public RunLogSaver(RunLogCollectorFactory runLogCollectorFactory, StorageAccessService storageService) {
         this.runLogCollectorFactory = runLogCollectorFactory;
         this.storageService = storageService;
     }
 
-    public void saveLog(Task task) throws StarwhaleException {
-        log.debug("logging for task {} begins...", task.getId());
+    public void saveLog(Run run) throws StarwhaleException {
+        log.debug("logging for run {} begins...", run.getId());
         try {
-            Tuple2<String, String> logInfo = runLogCollectorFactory.offlineCollector(task).collect();
+            Tuple2<String, String> logInfo = runLogCollectorFactory.offlineCollector(run).collect();
             if (null == logInfo) {
                 return;
             }
             String taskLog = logInfo._2();
-            log.debug("logs for task {} collected {} ...", task.getId(),
+            log.debug("logs for task {} collected {} ...", run.getId(),
                     StringUtils.hasText(taskLog) ? taskLog.substring(0, Math.min(taskLog.length() - 1, 100)) : "");
-            String logPath = resolveLogPath(task, logInfo._1());
+            String logPath = resolveLogPath(run, logInfo._1());
             log.debug("putting log to storage at path {}", logPath);
             storageService.put(logPath, taskLog.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
@@ -59,8 +60,8 @@ public class TaskLogSaver {
         }
     }
 
-    private String resolveLogPath(Task task, String logName) {
-        return task.getResultRootPath().logDir() + "/" + logName;
+    private String resolveLogPath(Run run, String logName) {
+        return run.getLogPath() + "/" + logName;
     }
 
 }

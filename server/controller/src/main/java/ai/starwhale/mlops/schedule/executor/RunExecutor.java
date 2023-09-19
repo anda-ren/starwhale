@@ -17,7 +17,7 @@
 package ai.starwhale.mlops.schedule.executor;
 
 import ai.starwhale.mlops.domain.run.bo.Run;
-import ai.starwhale.mlops.schedule.reporting.run.RunReportReceiver;
+import ai.starwhale.mlops.schedule.reporting.RunReportReceiver;
 import java.util.concurrent.Future;
 
 public interface RunExecutor {

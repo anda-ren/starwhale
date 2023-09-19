@@ -52,7 +52,7 @@ public class ContainerRunMapper {
         return containers.get(0);
     }
 
-    public Long runIdfOfContainer(Container container) {
+    public Long runIdOfContainer(Container container) {
         String runId = container.getLabels().get(CONTAINER_LABEL_RUN_ID);
         if (null != runId && StrUtil.isNumeric(runId)) {
             return Long.valueOf(runId);

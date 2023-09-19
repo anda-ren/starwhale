@@ -23,7 +23,7 @@ import ai.starwhale.mlops.exception.SwProcessException;
 import ai.starwhale.mlops.exception.SwProcessException.ErrorType;
 import ai.starwhale.mlops.schedule.executor.RunExecutor;
 import ai.starwhale.mlops.schedule.impl.container.ContainerCommand;
-import ai.starwhale.mlops.schedule.reporting.run.RunReportReceiver;
+import ai.starwhale.mlops.schedule.reporting.RunReportReceiver;
 import cn.hutool.json.JSONUtil;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.V1EnvVar;

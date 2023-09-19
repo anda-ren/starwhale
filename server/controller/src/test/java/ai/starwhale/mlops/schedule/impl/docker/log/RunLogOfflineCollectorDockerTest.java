@@ -22,7 +22,6 @@ import static org.mockito.Mockito.when;
 
 import ai.starwhale.mlops.domain.job.step.bo.Step;
 import ai.starwhale.mlops.domain.task.bo.Task;
-import ai.starwhale.mlops.schedule.impl.docker.ContainerTaskMapper;
 import ai.starwhale.mlops.schedule.impl.docker.DockerClientFinder;
 import ai.starwhale.mlops.schedule.impl.docker.LocalDockerTool;
 import com.github.dockerjava.api.DockerClient;
@@ -80,7 +79,7 @@ public class RunLogOfflineCollectorDockerTest {
         when(container.getId()).thenReturn(containerName);
         when(container.getNames()).thenReturn(new String[]{containerName});
         when(containerTaskMapper.containerOfTask(task)).thenReturn(container);
-        when(containerTaskMapper.taskIfOfContainer(container)).thenReturn(1L);
+        when(containerTaskMapper.runIdOfContainer(container)).thenReturn(1L);
         logOfflineCollectorDocker = new RunLogOfflineCollectorDocker(task, dockerClientFinder, containerTaskMapper);
     }
 

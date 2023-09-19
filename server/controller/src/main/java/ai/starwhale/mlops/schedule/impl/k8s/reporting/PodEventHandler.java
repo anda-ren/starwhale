@@ -16,19 +16,12 @@
 
 package ai.starwhale.mlops.schedule.impl.k8s.reporting;
 
-import ai.starwhale.mlops.domain.job.cache.HotJobHolder;
 import ai.starwhale.mlops.domain.run.bo.RunStatus;
-import ai.starwhale.mlops.domain.task.bo.Task;
-import ai.starwhale.mlops.domain.task.status.TaskStatus;
 import ai.starwhale.mlops.schedule.impl.k8s.Util;
-import ai.starwhale.mlops.schedule.log.TaskLogSaver;
-import ai.starwhale.mlops.schedule.reporting.ReportedTask;
-import ai.starwhale.mlops.schedule.reporting.TaskReportReceiver;
-import ai.starwhale.mlops.schedule.reporting.run.ReportedRun;
-import ai.starwhale.mlops.schedule.reporting.run.RunReportReceiver;
+import ai.starwhale.mlops.schedule.reporting.ReportedRun;
+import ai.starwhale.mlops.schedule.reporting.RunReportReceiver;
 import io.kubernetes.client.informer.ResourceEventHandler;
 import io.kubernetes.client.openapi.models.V1Pod;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -39,17 +32,10 @@ import org.springframework.util.StringUtils;
 @ConditionalOnProperty(value = "sw.scheduler.impl", havingValue = "k8s")
 public class PodEventHandler implements ResourceEventHandler<V1Pod> {
 
-    final TaskLogSaver taskLogSaver;
     final RunReportReceiver runReportReceiver;
-    final HotJobHolder jobHolder;
 
-    public PodEventHandler(
-            TaskLogSaver taskLogSaver,
-            RunReportReceiver runReportReceiver,
-            HotJobHolder jobHolder) {
-        this.taskLogSaver = taskLogSaver;
+    public PodEventHandler(RunReportReceiver runReportReceiver) {
         this.runReportReceiver = runReportReceiver;
-        this.jobHolder = jobHolder;
     }
 
     @Override
@@ -58,8 +44,7 @@ public class PodEventHandler implements ResourceEventHandler<V1Pod> {
 
     @Override
     public void onUpdate(V1Pod oldObj, V1Pod newObj) {
-        updateEvalTask(newObj);
-        collectLog(newObj);
+        reportRunStatus(newObj);
     }
 
     @Override
@@ -82,7 +67,7 @@ public class PodEventHandler implements ResourceEventHandler<V1Pod> {
         return id;
     }
 
-    private void updateEvalTask(V1Pod pod) {
+    private void reportRunStatus(V1Pod pod) {
         if (null == pod.getStatus() || null == pod.getStatus().getPhase()) {
             return;
         }
@@ -92,8 +77,8 @@ public class PodEventHandler implements ResourceEventHandler<V1Pod> {
             log.info("pod {} is being deleted", pod.getMetadata().getName());
             return;
         }
-        Long tid = getJobNameAsId(pod);
-        if (tid == null) {
+        Long rid = getJobNameAsId(pod);
+        if (rid == null) {
             return;
         }
 
@@ -129,49 +114,15 @@ public class PodEventHandler implements ResourceEventHandler<V1Pod> {
         if (pod.getStatus() != null) {
             startTime = Util.k8sTimeToMs(pod.getStatus().getStartTime());
         }
-        log.debug("task:{} status changed to {}.", tid, runStatus);
+        log.debug("run:{} status changed to {}.", rid, runStatus);
         var report = ReportedRun.builder()
-                .id(tid)
+                .id(rid)
                 .status(runStatus)
                 .ip(pod.getStatus().getPodIP())
                 .startTimeMillis(startTime)
                 .stopTimeMillis(null)
                 .build();
         runReportReceiver.receive(report);
-    }
-
-    /**
-     * In k8s implementation of taskScheduler there is task retry support
-     * So, every time a pod finishes we collect the log for the pod.
-     * This is a compensation for the log collecting in task watcher which only collect log once just before task
-     * finishes
-     *
-     * @param pod pod
-     */
-    private void collectLog(V1Pod pod) {
-        log.debug("collect log for pod {} status {}", pod.getMetadata().getName(), pod.getStatus());
-        if (null == pod.getStatus()
-                || null == pod.getStatus().getContainerStatuses()
-                || null == pod.getStatus().getContainerStatuses().get(0)
-                || null == pod.getStatus().getContainerStatuses().get(0).getState()
-                || null == pod.getStatus().getContainerStatuses().get(0).getState().getTerminated()
-        ) {
-            return;
-        }
-        if (pod.getMetadata() != null && pod.getMetadata().getDeletionTimestamp() != null) {
-            return;
-        }
-        Long id = getJobNameAsId(pod);
-        if (id != null) {
-            Task task = jobHolder.taskWithId(id);
-            if (null == task) {
-                log.warn("no tasks found for pod {}", pod.getMetadata().getName());
-                return;
-            }
-            taskLogSaver.saveLog(task);
-        }
-
-
     }
 
 }

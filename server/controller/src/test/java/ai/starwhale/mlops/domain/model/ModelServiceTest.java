@@ -78,13 +78,12 @@ import ai.starwhale.mlops.exception.SwNotFoundException;
 import ai.starwhale.mlops.exception.SwValidationException;
 import ai.starwhale.mlops.exception.api.StarwhaleApiException;
 import ai.starwhale.mlops.schedule.SwTaskScheduler;
-import ai.starwhale.mlops.schedule.impl.docker.ContainerTaskMapper;
 import ai.starwhale.mlops.schedule.impl.docker.DockerClientFinderSimpleImpl;
 import ai.starwhale.mlops.schedule.impl.docker.log.RunLogCollectorFactoryDocker;
 import ai.starwhale.mlops.schedule.impl.k8s.K8sClient;
 import ai.starwhale.mlops.schedule.impl.k8s.K8sJobTemplate;
 import ai.starwhale.mlops.schedule.impl.k8s.ResourceEventHolder;
-import ai.starwhale.mlops.schedule.log.TaskLogSaver;
+import ai.starwhale.mlops.schedule.log.RunLogSaver;
 import ai.starwhale.mlops.storage.LengthAbleInputStream;
 import ai.starwhale.mlops.storage.StorageAccessService;
 import ai.starwhale.mlops.storage.memory.StorageAccessServiceMemory;
@@ -144,7 +143,7 @@ import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
         "ai.starwhale.mlops.resulting",
         "ai.starwhale.mlops.configuration.security"},
         excludeFilters = {@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = ModelServingService.class)})
-@Import({K8sJobTemplate.class, ResourceEventHolder.class, SimpleMeterRegistry.class, TaskLogSaver.class,
+@Import({K8sJobTemplate.class, ResourceEventHolder.class, SimpleMeterRegistry.class, RunLogSaver.class,
         DockerClientFinderSimpleImpl.class,
         ContainerTaskMapper.class,
         RunLogCollectorFactoryDocker.class})

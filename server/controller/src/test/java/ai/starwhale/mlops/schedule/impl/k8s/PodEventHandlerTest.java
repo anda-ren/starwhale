@@ -28,9 +28,7 @@ import ai.starwhale.mlops.domain.job.cache.HotJobHolder;
 import ai.starwhale.mlops.domain.task.bo.Task;
 import ai.starwhale.mlops.domain.task.status.TaskStatus;
 import ai.starwhale.mlops.schedule.impl.k8s.reporting.PodEventHandler;
-import ai.starwhale.mlops.schedule.log.TaskLogSaver;
-import ai.starwhale.mlops.schedule.reporting.ReportedTask;
-import ai.starwhale.mlops.schedule.reporting.TaskReportReceiver;
+import ai.starwhale.mlops.schedule.log.RunLogSaver;
 import io.kubernetes.client.openapi.models.V1ContainerState;
 import io.kubernetes.client.openapi.models.V1ContainerStateTerminated;
 import io.kubernetes.client.openapi.models.V1ContainerStatus;
@@ -49,7 +47,7 @@ public class PodEventHandlerTest {
 
     PodEventHandler podEventHandler;
 
-    TaskLogSaver taskLogSaver;
+    RunLogSaver runLogSaver;
     TaskReportReceiver taskReportReceiver;
 
     HotJobHolder hotJobHolder;
@@ -59,10 +57,10 @@ public class PodEventHandlerTest {
     @BeforeEach
     public void setup() {
         hotJobHolder = mock(HotJobHolder.class);
-        taskLogSaver = mock(TaskLogSaver.class);
+        runLogSaver = mock(RunLogSaver.class);
         taskReportReceiver = mock(TaskReportReceiver.class);
         podEventHandler = new PodEventHandler(
-                taskLogSaver, taskReportReceiver, hotJobHolder);
+                runLogSaver, taskReportReceiver, hotJobHolder);
         v1Pod = new V1Pod()
                 .metadata(new V1ObjectMeta()
                         .labels(Map.of("job-name", "3", "job-type", "eval")).name("3-xxx"))
@@ -78,7 +76,7 @@ public class PodEventHandlerTest {
         Task task = mock(Task.class);
         when(hotJobHolder.taskWithId(List.of(3L))).thenReturn(List.of(task));
         podEventHandler.onUpdate(null, v1Pod);
-        verify(taskLogSaver).saveLog(task);
+        verify(runLogSaver).saveLog(task);
     }
 
     @Test
@@ -87,7 +85,7 @@ public class PodEventHandlerTest {
         v1Pod.getStatus().phase("Pending");
         v1Pod.getStatus().podIP("127.0.0.1");
         podEventHandler.onUpdate(null, v1Pod);
-        verify(taskLogSaver, times(0)).saveLog(any());
+        verify(runLogSaver, times(0)).saveLog(any());
         verify(taskReportReceiver, times(1)).receive(any());
         verify(taskReportReceiver).receive(argThat(tasks ->
                 tasks.size() == 1
@@ -100,7 +98,7 @@ public class PodEventHandlerTest {
     public void testTaskNotFound() {
         when(hotJobHolder.taskWithId(List.of(3L))).thenReturn(List.of());
         podEventHandler.onUpdate(null, v1Pod);
-        verify(taskLogSaver, times(0)).saveLog(any());
+        verify(runLogSaver, times(0)).saveLog(any());
     }
 
     @Test
@@ -109,7 +107,7 @@ public class PodEventHandlerTest {
         v1Pod.getStatus().phase("Pending");
         v1Pod.getStatus().conditions(List.of(new V1PodCondition().status("True").type("PodScheduled")));
         podEventHandler.onUpdate(null, v1Pod);
-        verify(taskLogSaver, times(0)).saveLog(any());
+        verify(runLogSaver, times(0)).saveLog(any());
         var expect = ReportedTask.builder()
                 .id(3L)
                 .status(TaskStatus.PREPARING)
@@ -122,7 +120,7 @@ public class PodEventHandlerTest {
         v1Pod.getMetadata().setDeletionTimestamp(OffsetDateTime.now());
         v1Pod.getStatus().setPhase("Running");
         podEventHandler.onUpdate(null, v1Pod);
-        verify(taskLogSaver, never()).saveLog(any());
+        verify(runLogSaver, never()).saveLog(any());
         verify(taskReportReceiver, never()).receive(any());
     }
 }

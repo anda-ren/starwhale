@@ -45,7 +45,6 @@ import ai.starwhale.mlops.exception.SwProcessException;
 import ai.starwhale.mlops.schedule.impl.container.ContainerCommand;
 import ai.starwhale.mlops.schedule.impl.container.ContainerSpecification;
 import ai.starwhale.mlops.schedule.impl.container.TaskContainerSpecificationFinder;
-import ai.starwhale.mlops.schedule.reporting.TaskReportReceiver;
 import ai.starwhale.mlops.storage.StorageAccessService;
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiException;

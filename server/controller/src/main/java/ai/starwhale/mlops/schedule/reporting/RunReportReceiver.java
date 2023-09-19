@@ -16,16 +16,7 @@
 
 package ai.starwhale.mlops.schedule.reporting;
 
-import java.util.List;
+public interface RunReportReceiver {
 
-/**
- * receive task status from agents
- */
-public interface TaskReportReceiver {
-
-    /**
-     * process the report from Agent
-     */
-    void receive(List<ReportedTask> tasks);
-
+    void receive(ReportedRun reportedRun);
 }

@@ -17,11 +17,10 @@
 package ai.starwhale.mlops.schedule.impl.docker;
 
 import ai.starwhale.mlops.schedule.RunExecutorAbstractFactory;
-import ai.starwhale.mlops.schedule.SwTaskScheduler;
 import ai.starwhale.mlops.schedule.executor.RunExecutor;
 import ai.starwhale.mlops.schedule.impl.container.TaskContainerSpecificationFinder;
 import ai.starwhale.mlops.schedule.impl.docker.log.RunLogCollectorFactoryDocker;
-import ai.starwhale.mlops.schedule.impl.docker.reporting.DockerTaskReporter;
+import ai.starwhale.mlops.schedule.impl.docker.reporting.DockerExecutorReporter;
 import ai.starwhale.mlops.schedule.log.RunLogCollectorFactory;
 import java.util.concurrent.Executors;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +37,7 @@ public class RunExecutorFactoryDocker implements RunExecutorAbstractFactory {
 
     final ContainerRunMapper containerRunMapper;
 
-    final DockerTaskReporter dockerTaskReporter;
+    final DockerExecutorReporter dockerExecutorReporter;
 
     final TaskContainerSpecificationFinder taskContainerSpecificationFinder;
 
@@ -46,14 +45,14 @@ public class RunExecutorFactoryDocker implements RunExecutorAbstractFactory {
     final String nodeIp;
 
     public RunExecutorFactoryDocker(DockerClientFinder dockerClientFinder, ContainerRunMapper containerRunMapper,
-                                    DockerTaskReporter dockerTaskReporter,
+                                    DockerExecutorReporter dockerExecutorReporter,
                                     TaskContainerSpecificationFinder taskContainerSpecificationFinder,
                                     @Value("${sw.scheduler.docker.network}") String network,
                                     @Value("${sw.scheduler.docker.node-ip}") String nodeIp
     ) {
         this.dockerClientFinder = dockerClientFinder;
         this.containerRunMapper = containerRunMapper;
-        this.dockerTaskReporter = dockerTaskReporter;
+        this.dockerExecutorReporter = dockerExecutorReporter;
         this.taskContainerSpecificationFinder = taskContainerSpecificationFinder;
         this.network = network;
         this.nodeIp = nodeIp;

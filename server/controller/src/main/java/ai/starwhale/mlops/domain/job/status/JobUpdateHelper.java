@@ -61,6 +61,10 @@ public class JobUpdateHelper {
 
     public void updateJob(Job job) {
         JobStatus currentStatus = job.getStatus();
+        if(jobStatusMachine.isFinal(currentStatus)){
+            tryRemoveJobFromCache(job);
+            return;
+        }
         Set<StepStatus> stepStatuses = job.getSteps().stream().map(Step::getStatus)
                 .collect(Collectors.toSet());
         JobStatus desiredJobStatus = jobStatusCalculator.desiredJobStatus(stepStatuses);
@@ -90,22 +94,16 @@ public class JobUpdateHelper {
                     TaskStatusChangeWatcher.SKIPPED_WATCHERS.remove();
                 });
             }
+            tryRemoveJobFromCache(job);
+        }
+    }
+
+    private void tryRemoveJobFromCache(Job job) {
+        Boolean oneTaskRunning = job.getSteps().stream().map(Step::getTasks).flatMap(Collection::stream)
+                .map(Task::getStatus).map(taskStatusMachine::isFinal).reduce(false, (a, b) -> a || b);
+        if (!oneTaskRunning) {
             jobHolder.remove(job.getId());
         }
     }
 
-
-    private void tryRemoveJobFromCache(Job job) {
-        for (Step step : job.getSteps()) {
-            for (Task task : step.getTasks()) {
-                if (!taskStatusMachine.isFinal(task.getStatus()) && task.getStatus() != TaskStatus.CREATED) {
-                    return;
-                }
-            }
-        }
-        jobHolder.remove(job.getId());
-        log.info("job removed from JobHolder because all task is finished and job status is: {} job id is: {}",
-                job.getStatus(), job.getId());
-
-    }
 }

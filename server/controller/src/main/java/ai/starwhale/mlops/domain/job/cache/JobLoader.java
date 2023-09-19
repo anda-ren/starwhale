@@ -24,7 +24,6 @@ import ai.starwhale.mlops.domain.task.status.WatchableTask;
 import ai.starwhale.mlops.domain.task.status.WatchableTaskFactory;
 import ai.starwhale.mlops.domain.upgrade.rollup.aspectcut.WriteOperation;
 import ai.starwhale.mlops.schedule.SwTaskScheduler;
-import ai.starwhale.mlops.schedule.reporting.TaskReportReceiver;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,14 +45,12 @@ public class JobLoader {
 
     final SwTaskScheduler swTaskScheduler;
 
-    final TaskReportReceiver taskReportReceiver;
 
     public JobLoader(HotJobHolder jobHolder, WatchableTaskFactory watchableTaskFactory,
-            SwTaskScheduler swTaskScheduler, TaskReportReceiver taskReportReceiver) {
+            SwTaskScheduler swTaskScheduler) {
         this.jobHolder = jobHolder;
         this.watchableTaskFactory = watchableTaskFactory;
         this.swTaskScheduler = swTaskScheduler;
-        this.taskReportReceiver = taskReportReceiver;
     }
 
     @WriteOperation
@@ -87,7 +84,6 @@ public class JobLoader {
                     // FAIL -> ready is forbidden by status machine, so make it to CREATED at first
                     ((WatchableTask) t).unwrap().updateStatus(TaskStatus.CREATED);
                     t.updateStatus(TaskStatus.READY);
-                    t.setCurrentRun(System.currentTimeMillis());
                 });
     }
 
@@ -98,7 +94,9 @@ public class JobLoader {
         if (CollectionUtils.isEmpty(tasks)) {
             return;
         }
-        swTaskScheduler.schedule(tasks, taskReportReceiver);
+        tasks.parallelStream().forEach(task -> {
+            swTaskScheduler.schedule(task);
+        });
     }
 
 }

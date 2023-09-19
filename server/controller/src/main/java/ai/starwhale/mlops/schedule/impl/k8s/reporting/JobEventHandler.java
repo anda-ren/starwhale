@@ -17,11 +17,10 @@
 package ai.starwhale.mlops.schedule.impl.k8s.reporting;
 
 import ai.starwhale.mlops.domain.run.bo.RunStatus;
-import ai.starwhale.mlops.domain.task.status.TaskStatusMachine;
 import ai.starwhale.mlops.schedule.impl.k8s.K8sClient;
 import ai.starwhale.mlops.schedule.impl.k8s.Util;
-import ai.starwhale.mlops.schedule.reporting.run.ReportedRun;
-import ai.starwhale.mlops.schedule.reporting.run.RunReportReceiver;
+import ai.starwhale.mlops.schedule.reporting.ReportedRun;
+import ai.starwhale.mlops.schedule.reporting.RunReportReceiver;
 import io.kubernetes.client.informer.ResourceEventHandler;
 import io.kubernetes.client.openapi.models.V1Job;
 import io.kubernetes.client.openapi.models.V1JobCondition;
@@ -53,30 +52,27 @@ public class JobEventHandler implements ResourceEventHandler<V1Job> {
 
     @Override
     public void onAdd(V1Job obj) {
-        dispatch(obj, "onAdd");
+        log.debug("k8s job(onAdd) {} with status {}", jobName(obj), obj.getStatus());
+        reportRunStatus(obj);
     }
 
     @Override
     public void onUpdate(V1Job oldObj, V1Job newObj) {
-        dispatch(newObj, "onUpdate");
+        log.debug("k8s job(onUpdate) {} with status {}", jobName(newObj), newObj.getStatus());
+        reportRunStatus(newObj);
     }
 
     @Override
     public void onDelete(V1Job obj, boolean deletedFinalStateUnknown) {
         log.debug("job deleted for {} {}", jobName(obj), obj.getStatus());
-        updateEvalTask(obj, true);
+        reportRunStatus(obj);
     }
 
     private String jobName(V1Job obj) {
         return obj.getMetadata().getName();
     }
 
-    private void dispatch(V1Job job, String event) {
-        log.debug("job({}) {} with status {}", event, jobName(job), job.getStatus());
-        updateEvalTask(job, false);
-    }
-
-    private void updateEvalTask(V1Job job, boolean onDelete) {
+    private void reportRunStatus(V1Job job) {
         V1JobStatus status = job.getStatus();
         if (status == null) {
             return;
@@ -127,17 +123,14 @@ public class JobEventHandler implements ResourceEventHandler<V1Job> {
         }
 
 
-        Long startTime = null;
-        if (runStatus == RunStatus.FINISHED || runStatus == RunStatus.FAILED) {
-            startTime = getPodStartTime(jobName);
-            if (startTime == null) {
-                log.warn("no pod start time found for job {}, use now", jobName);
-                startTime = System.currentTimeMillis();
-            }
-            if (stopTime == null) {
-                stopTime = System.currentTimeMillis();
-                log.warn("no pod stop time found for job {}, use now", jobName);
-            }
+        Long startTime = getPodStartTime(jobName);
+        if (startTime == null) {
+            log.warn("no pod start time found for job {}, use now", jobName);
+            startTime = System.currentTimeMillis();
+        }
+        if (stopTime == null) {
+            stopTime = System.currentTimeMillis();
+            log.warn("no pod stop time found for job {}, use now", jobName);
         }
 
         // prefer using the pod failed reason, it has more details

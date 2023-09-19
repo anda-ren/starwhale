@@ -16,27 +16,22 @@
 
 package ai.starwhale.mlops.schedule.reporting;
 
-import ai.starwhale.mlops.domain.task.status.TaskStatus;
+import ai.starwhale.mlops.domain.run.bo.RunStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-/**
- * convert taskReport to
- */
 @Getter
 @AllArgsConstructor
 @EqualsAndHashCode
 @Builder
-public class ReportedTask {
+public class ReportedRun {
 
-    final Long id;
-    final TaskStatus status;
-    final Integer retryCount;
-    final String ip;
-    final Long startTimeMillis;
-    final Long stopTimeMillis;
-    final String failedReason;
-    final Long generation;
+    Long id;
+    RunStatus status;
+    String ip;
+    Long startTimeMillis;
+    Long stopTimeMillis;
+    String failedReason;
 }

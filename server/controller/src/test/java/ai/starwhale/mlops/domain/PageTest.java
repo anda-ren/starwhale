@@ -60,7 +60,6 @@ import ai.starwhale.mlops.domain.task.status.TaskStatus;
 import ai.starwhale.mlops.domain.user.mapper.UserMapper;
 import ai.starwhale.mlops.domain.user.po.UserEntity;
 import ai.starwhale.mlops.schedule.impl.container.TaskContainerSpecificationFinder;
-import ai.starwhale.mlops.schedule.impl.docker.ContainerTaskMapper;
 import ai.starwhale.mlops.schedule.impl.docker.DockerClientFinderSimpleImpl;
 import ai.starwhale.mlops.schedule.impl.docker.log.RunLogCollectorFactoryDocker;
 import ai.starwhale.mlops.schedule.impl.k8s.K8sClient;

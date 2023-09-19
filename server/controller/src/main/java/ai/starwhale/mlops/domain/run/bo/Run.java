@@ -24,10 +24,12 @@ import lombok.Data;
 public class Run {
     private Long id;
     private Long taskId;
+    private RunStatus status;
+    private RunSpec runSpec;
+    private String logPath;
     private String ip;
     private Long startTime;
     private Long finishTime;
-    private RunStatus runStatus;
-    private RunSpec runSpec;
+    private String failedReason;
 
 }

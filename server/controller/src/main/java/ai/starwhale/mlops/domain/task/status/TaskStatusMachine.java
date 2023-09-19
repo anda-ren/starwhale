@@ -24,6 +24,7 @@ import static ai.starwhale.mlops.domain.task.status.TaskStatus.FAIL;
 import static ai.starwhale.mlops.domain.task.status.TaskStatus.PAUSED;
 import static ai.starwhale.mlops.domain.task.status.TaskStatus.PREPARING;
 import static ai.starwhale.mlops.domain.task.status.TaskStatus.READY;
+import static ai.starwhale.mlops.domain.task.status.TaskStatus.RETRYING;
 import static ai.starwhale.mlops.domain.task.status.TaskStatus.RUNNING;
 import static ai.starwhale.mlops.domain.task.status.TaskStatus.SUCCESS;
 import static ai.starwhale.mlops.domain.task.status.TaskStatus.UNKNOWN;
@@ -90,9 +91,9 @@ public class TaskStatusMachine {
                     )
             ),
             new SimpleEntry<>(
-                    ASSIGNING,
+                    RETRYING,
                     Map.of(RunStatus.PENDING,
-                           PREPARING,
+                           RETRYING,
                            RunStatus.RUNNING,
                            RUNNING,
                            RunStatus.FAILED,

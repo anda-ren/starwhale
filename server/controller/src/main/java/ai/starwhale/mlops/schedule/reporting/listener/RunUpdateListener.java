@@ -14,24 +14,14 @@
  * limitations under the License.
  */
 
-package ai.starwhale.mlops.schedule.reporting.run;
+package ai.starwhale.mlops.schedule.reporting.listener;
 
-import ai.starwhale.mlops.domain.run.bo.RunStatus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import ai.starwhale.mlops.domain.run.bo.Run;
 
-@Getter
-@AllArgsConstructor
-@EqualsAndHashCode
-@Builder
-public class ReportedRun {
+public interface RunUpdateListener {
 
-    Long id;
-    RunStatus status;
-    String ip;
-    Long startTimeMillis;
-    Long stopTimeMillis;
-    String failedReason;
+    void onRunUpdate(Run run);
+
+    int getOrder();
+
 }

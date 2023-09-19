@@ -27,7 +27,6 @@ import ai.starwhale.mlops.domain.job.step.bo.Step;
 import ai.starwhale.mlops.domain.task.bo.Task;
 import ai.starwhale.mlops.domain.task.status.TaskStatus;
 import ai.starwhale.mlops.domain.task.status.TaskStatusMachine;
-import ai.starwhale.mlops.domain.task.status.watchers.TaskWatcherForDataConsumption;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;

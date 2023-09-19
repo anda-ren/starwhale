@@ -17,16 +17,67 @@
 package ai.starwhale.mlops.domain.run;
 
 import java.util.List;
+import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Options;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.UpdateProvider;
+import org.apache.ibatis.jdbc.SQL;
 
+@Mapper
 public interface RunMapper {
 
+    String COLUMNS = "id,           \n" +
+            "task_id,      \n" +
+            "status,       \n" +
+            "log_path,     \n" +
+            "run_spec,     \n" +
+            "ip,           \n" +
+            "failed_reason,\n" +
+            "start_time,   \n" +
+            "finish_time,  \n" +
+            "created_time, \n" +
+            "updated_time ";
+
+    @Select("select " + COLUMNS + " from run where task_id = #{taskId} order by id")
     List<RunEntity> list(Long taskId);
 
+    @Select("select " + COLUMNS + " from run where id = #{id}")
     RunEntity get(Long id);
 
-    void insert(RunEntity runEntity);
+    @Select("select " + COLUMNS + " from run where id = #{id} for update")
+    RunEntity getForUpdate(Long id);
 
+    @Insert("insert into run"
+            + " (task_id, status, log_path, run_spec)"
+            + " values (#{run.taskId}, #{run.status}, #{run.logPath},"
+            + " #{run.runSpec})")
+    @Options(useGeneratedKeys = true, keyColumn = "id", keyProperty = "id")
+    void insert(RunEntity run);
+
+    class UpdateRunEntitySqlProvider {
+        public static String update(RunEntity runEntity) {
+            return new SQL() {{
+                UPDATE("run");
+                if (null != runEntity.getStatus()) {
+                    SET("status=#{status}");
+                }
+                if (null != runEntity.getFailedReason()) {
+                    SET("failed_reason=#{failedReason}");
+                }
+                if (null != runEntity.getStartTime()) {
+                    SET("start_time=#{startTime}");
+                }
+                if (null != runEntity.getFinishTime()) {
+                    SET("finish_time=#{finishTime}");
+                }
+                if (null != runEntity.getIp()) {
+                    SET("ip=#{ip}");
+                }
+                WHERE("id=#{id}");
+            }}.toString();
+        }
+    }
+    @UpdateProvider(value = UpdateRunEntitySqlProvider.class, method = "update")
     void update(RunEntity runEntity);
-
-    void delete(Long id);
 }

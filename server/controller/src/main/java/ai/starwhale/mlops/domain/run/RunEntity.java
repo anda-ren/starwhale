@@ -33,11 +33,12 @@ public class RunEntity extends BaseEntity {
 
     private Long id;
     private Long taskId;
-    private String ip;
+    private RunStatus status;
     private String logPath;
+    private String runSpec;
+    private String ip;
+    String failedReason;
     private Long startTime;
     private Long finishTime;
-    private RunStatus runStatus;
-    private String runSpec;
 
 }

@@ -22,14 +22,15 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import ai.starwhale.mlops.domain.run.bo.RunStatus;
 import ai.starwhale.mlops.domain.system.SystemSettingService;
 import ai.starwhale.mlops.domain.system.resourcepool.bo.ResourcePool;
-import ai.starwhale.mlops.domain.task.status.TaskStatus;
 import ai.starwhale.mlops.domain.task.status.TaskStatusMachine;
-import ai.starwhale.mlops.schedule.impl.docker.ContainerTaskMapper;
+import ai.starwhale.mlops.schedule.impl.docker.ContainerRunMapper;
 import ai.starwhale.mlops.schedule.impl.docker.DockerClientFinder;
-import ai.starwhale.mlops.schedule.reporting.ReportedTask;
-import ai.starwhale.mlops.schedule.reporting.TaskReportReceiver;
+import ai.starwhale.mlops.schedule.impl.docker.RunExecutorDockerImpl;
+import ai.starwhale.mlops.schedule.reporting.ReportedRun;
+import ai.starwhale.mlops.schedule.reporting.RunReportReceiver;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.ListContainersCmd;
 import com.github.dockerjava.api.model.Container;
@@ -39,57 +40,55 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-public class DockerTaskReporterTest {
+public class DockerExecutorReporterTest {
 
-    TaskReportReceiver taskReportReceiver;
+    RunReportReceiver runReportReceiver;
     SystemSettingService systemSettingService;
     DockerClientFinder dockerClientFinder;
-    ContainerTaskMapper containerTaskMapper;
+    ContainerRunMapper containerRunMapper;
     ContainerStatusExplainer containerStatusExplainerOnLabel;
     TaskStatusMachine taskStatusMachine;
-    DockerTaskReporter dockerTaskReporter;
+    DockerExecutorReporter dockerExecutorReporter;
 
     @BeforeEach
     public void setup() {
-        taskReportReceiver = mock(TaskReportReceiver.class);
+        runReportReceiver = mock(RunReportReceiver.class);
         systemSettingService = mock(SystemSettingService.class);
         dockerClientFinder = mock(DockerClientFinder.class);
-        containerTaskMapper = mock(ContainerTaskMapper.class);
+        containerRunMapper = mock(ContainerRunMapper.class);
         containerStatusExplainerOnLabel = mock(ContainerStatusExplainer.class);
         taskStatusMachine = mock(TaskStatusMachine.class);
-        dockerTaskReporter = new DockerTaskReporter(taskReportReceiver, systemSettingService, dockerClientFinder,
-                containerTaskMapper, containerStatusExplainerOnLabel, taskStatusMachine);
+        dockerExecutorReporter = new DockerExecutorReporter(runReportReceiver, systemSettingService, dockerClientFinder,
+                                                            containerRunMapper, containerStatusExplainerOnLabel, taskStatusMachine);
     }
 
     @Test
     public void testReportTask() {
         Container c = mock(Container.class);
         when(c.getNames()).thenReturn(new String[]{"a"});
-        when(containerTaskMapper.taskIfOfContainer(any())).thenReturn(1L);
-        when(containerStatusExplainerOnLabel.statusOf(c)).thenReturn(TaskStatus.CANCELED);
+        when(containerRunMapper.runIdOfContainer(any())).thenReturn(1L);
+        when(containerStatusExplainerOnLabel.statusOf(c)).thenReturn(RunStatus.FAILED);
         when(taskStatusMachine.isFinal(any())).thenReturn(true);
-        dockerTaskReporter.reportTask(c);
-        ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
-        verify(taskReportReceiver).receive(captor.capture());
-        List reportedTasks = captor.getValue();
-        ReportedTask t = (ReportedTask) reportedTasks.get(0);
-        Assertions.assertEquals(1L, t.getId());
-        Assertions.assertEquals(TaskStatus.CANCELED, t.getStatus());
-        Assertions.assertNull(t.getFailedReason());
-        Assertions.assertNotNull(t.getStopTimeMillis());
+        dockerExecutorReporter.reportRun(c);
+        ArgumentCaptor<ReportedRun> captor = ArgumentCaptor.forClass(ReportedRun.class);
+        verify(runReportReceiver).receive(captor.capture());
+        ReportedRun reportedRun = captor.getValue();
+        Assertions.assertEquals(1L, reportedRun.getId());
+        Assertions.assertEquals(RunStatus.FAILED, reportedRun.getStatus());
+        Assertions.assertNull(reportedRun.getFailedReason());
+        Assertions.assertNotNull(reportedRun.getStopTimeMillis());
 
         String failReason = "Exit (1) blab-la";
         when(c.getStatus()).thenReturn(failReason);
-        when(containerStatusExplainerOnLabel.statusOf(c)).thenReturn(TaskStatus.FAIL);
+        when(containerStatusExplainerOnLabel.statusOf(c)).thenReturn(RunStatus.FINISHED);
         when(taskStatusMachine.isFinal(any())).thenReturn(true);
-        dockerTaskReporter.reportTask(c);
-        verify(taskReportReceiver, times(2)).receive(captor.capture());
-        reportedTasks = captor.getValue();
-        t = (ReportedTask) reportedTasks.get(0);
-        Assertions.assertEquals(1L, t.getId());
-        Assertions.assertEquals(TaskStatus.FAIL, t.getStatus());
-        Assertions.assertEquals(failReason, t.getFailedReason());
-        Assertions.assertNotNull(t.getStopTimeMillis());
+        dockerExecutorReporter.reportRun(c);
+        verify(runReportReceiver, times(2)).receive(captor.capture());
+        reportedRun = captor.getValue();
+        Assertions.assertEquals(1L, reportedRun.getId());
+        Assertions.assertEquals(RunStatus.FINISHED, reportedRun.getStatus());
+        Assertions.assertEquals(failReason, reportedRun.getFailedReason());
+        Assertions.assertNotNull(reportedRun.getStopTimeMillis());
 
     }
 
@@ -110,20 +109,18 @@ public class DockerTaskReporterTest {
         when(dockerClientFinder.findProperDockerClient(any())).thenReturn(dockerClient);
         ListContainersCmd listContainersCmd = mock(
                 ListContainersCmd.class);
-        when(listContainersCmd.withLabelFilter(SwTaskSchedulerDocker.CONTAINER_LABELS)).thenReturn(listContainersCmd);
+        when(listContainersCmd.withLabelFilter(RunExecutorDockerImpl.CONTAINER_LABELS)).thenReturn(listContainersCmd);
         when(listContainersCmd.withShowAll(true)).thenReturn(listContainersCmd);
         when(dockerClient.listContainersCmd()).thenReturn(listContainersCmd);
         Container c = mock(Container.class);
         when(listContainersCmd.exec()).thenReturn(List.of(c));
         when(c.getNames()).thenReturn(new String[]{"a"});
-        when(containerTaskMapper.taskIfOfContainer(any())).thenReturn(1L);
-        when(containerStatusExplainerOnLabel.statusOf(c)).thenReturn(TaskStatus.CANCELED);
+        when(containerRunMapper.runIdOfContainer(any())).thenReturn(1L);
+        when(containerStatusExplainerOnLabel.statusOf(c)).thenReturn(RunStatus.FAILED);
         when(taskStatusMachine.isFinal(any())).thenReturn(true);
 
-        dockerTaskReporter.reportTasks();
-        ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
-        verify(taskReportReceiver).receive(captor.capture());
-        Assertions.assertEquals(1, captor.getValue().size());
+        dockerExecutorReporter.reportRuns();
+        verify(runReportReceiver, times(1)).receive(any());
     }
 
 }

@@ -17,23 +17,16 @@
 package ai.starwhale.mlops.schedule.impl.docker;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import ai.starwhale.mlops.domain.job.bo.Job;
-import ai.starwhale.mlops.domain.job.bo.JobRuntime;
-import ai.starwhale.mlops.domain.job.step.bo.Step;
-import ai.starwhale.mlops.domain.task.bo.Task;
-import ai.starwhale.mlops.domain.task.bo.TaskRequest;
-import ai.starwhale.mlops.domain.task.status.TaskStatus;
+import ai.starwhale.mlops.domain.run.bo.Run;
+import ai.starwhale.mlops.domain.run.bo.RunSpec;
+import ai.starwhale.mlops.domain.run.bo.RunStatus;
 import ai.starwhale.mlops.schedule.impl.container.ContainerCommand;
-import ai.starwhale.mlops.schedule.impl.container.ContainerSpecification;
-import ai.starwhale.mlops.schedule.impl.container.TaskContainerSpecificationFinder;
-import ai.starwhale.mlops.schedule.impl.docker.reporting.DockerTaskReporter;
-import ai.starwhale.mlops.schedule.reporting.ReportedTask;
-import ai.starwhale.mlops.schedule.reporting.TaskReportReceiver;
+import ai.starwhale.mlops.schedule.reporting.ReportedRun;
+import ai.starwhale.mlops.schedule.reporting.RunReportReceiver;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
@@ -54,53 +47,56 @@ import org.junit.jupiter.api.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-public class SwTaskSchedulerDockerTest {
+public class RunExecutorDockerTest {
 
     static final String IMAGE_BUSY_BOX = "busybox:latest";
     DockerClientFinder dockerClientFinder;
-    ContainerTaskMapper containerTaskMapper;
-    DockerTaskReporter dockerTaskReporter;
+    ContainerRunMapper containerRunMapper;
     ExecutorService cmdExecThreadPool;
-    TaskContainerSpecificationFinder taskContainerSpecificationFinder;
     String network;
     String nodeIp;
-    SwTaskSchedulerDocker swTaskSchedulerDocker;
+    RunExecutorDockerImpl runExecutorDocker;
     DockerClient dockerClient;
 
-    TaskReportReceiver taskReportReceiver;
+    RunReportReceiver runReportReceiver;
+
+    Run run;
 
     @BeforeEach
     public void setup() {
-        taskReportReceiver = mock(TaskReportReceiver.class);
+        runReportReceiver = mock(RunReportReceiver.class);
         dockerClientFinder = mock(DockerClientFinder.class);
         dockerClient = localDocker();
+        run = Run.builder()
+                .id(1L)
+                .runSpec(RunSpec.builder()
+                                 .envs(Map.of("ENV_NAME", "env_value"))
+                                 .image(IMAGE_BUSY_BOX)
+                                 .command(new ContainerCommand(new String[]{"tail", "-f", "/dev/null"}, null))
+                                 .requestedResources(List.of())
+                                 .resourcePool(null)
+                                 .build()
+                )
+                .build();
         when(dockerClientFinder.findProperDockerClient(any())).thenReturn(dockerClient);
-        containerTaskMapper = mock(ContainerTaskMapper.class);
+        containerRunMapper = mock(ContainerRunMapper.class);
         String containerName = "sw-ut-busybox";
         Container container = mock(Container.class);
         when(container.getId()).thenReturn(containerName);
         when(container.getState()).thenReturn("exited");
-        when(containerTaskMapper.containerOfTask(any())).thenReturn(container);
-        when(containerTaskMapper.containerName(any())).thenReturn(containerName);
-        dockerTaskReporter = mock(DockerTaskReporter.class);
+        when(containerRunMapper.containerOfRun(any())).thenReturn(container);
+        when(containerRunMapper.containerName(any())).thenReturn(containerName);
         cmdExecThreadPool = Executors.newCachedThreadPool();
-        taskContainerSpecificationFinder = mock(TaskContainerSpecificationFinder.class);
-        ContainerSpecification cs = mock(ContainerSpecification.class);
-        when(cs.getContainerEnvs()).thenReturn(Map.of("ENV_NAME", "env_value"));
-        when(cs.getImage()).thenReturn(IMAGE_BUSY_BOX);
-        when(cs.getCmd()).thenReturn(new ContainerCommand(new String[]{"tail", "-f", "/dev/null"}, null));
-        when(taskContainerSpecificationFinder.findCs(any())).thenReturn(cs);
         network = "host";
         nodeIp = "127.1.0.2";
-        swTaskSchedulerDocker = new SwTaskSchedulerDocker(
+        runExecutorDocker = new RunExecutorDockerImpl(
                 dockerClientFinder,
-                containerTaskMapper,
-                dockerTaskReporter,
+                new HostResourceConfigBuilder(),
                 cmdExecThreadPool,
-                taskContainerSpecificationFinder,
+                containerRunMapper,
                 network,
-                nodeIp,
-                new HostResourceConfigBuilder());
+                nodeIp
+        );
         try {
             dockerClient.removeContainerCmd(containerName).withForce(true).exec();
         } catch (Exception e) {
@@ -112,48 +108,40 @@ public class SwTaskSchedulerDockerTest {
 
     @Test
     public void testExec() throws ExecutionException, InterruptedException {
-        Task task = Task.builder()
-                .id(1L)
-                .step(Step.builder()
-                        .job(Job.builder().jobRuntime(JobRuntime.builder().image(IMAGE_BUSY_BOX).build()).build())
-                        .build()
-                )
-                .taskRequest(new TaskRequest())
-                .build();
-        testSchedule(task);
+        testSchedule(run);
         Object lock = new Object();
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                List<ReportedTask> reportedTasks = (List<ReportedTask>) invocationOnMock.getArguments()[0];
-                if (reportedTasks.get(0).getStatus() == TaskStatus.RUNNING
-                        || reportedTasks.get(0).getStatus() == TaskStatus.FAIL) {
+                ReportedRun reportedRun = (ReportedRun) invocationOnMock.getArguments()[0];
+                if (reportedRun.getStatus() == RunStatus.RUNNING
+                        || reportedRun.getStatus() == RunStatus.FAILED) {
                     synchronized (lock) {
                         lock.notifyAll();
                     }
                 }
                 return null;
             }
-        }).when(taskReportReceiver).receive(anyList());
+        }).when(runReportReceiver).receive(any());
         synchronized (lock) {
             //a timeout is set in case there are errors in the test where there is no chance a container is started.
             lock.wait(1000 * 60 * 5);
         }
-        Future<String[]> future = swTaskSchedulerDocker.exec(task, "echo", "$ENV_NAME");
+        Future<String[]> future = runExecutorDocker.exec(run, "echo", "$ENV_NAME");
         String[] strings = future.get();
         Assertions.assertEquals("env_value", strings[0].replace("STDOUT:", "").strip());
-        testStop(task);
+        testStop(run);
     }
 
-    private void testStop(Task task) {
-        swTaskSchedulerDocker.stop(Set.of(task));
+    private void testStop(Run run) {
+        runExecutorDocker.stop(run);
         var lc = dockerClient.listContainersCmd().withNameFilter(Set.of("sw-ut-busybox")).withShowAll(true).exec();
         Assertions.assertEquals(0, lc.size());
 
     }
 
-    private void testSchedule(Task task) {
-        swTaskSchedulerDocker.schedule(Set.of(task), taskReportReceiver);
+    private void testSchedule(Run run) {
+        runExecutorDocker.run(run, runReportReceiver);
 
     }
 

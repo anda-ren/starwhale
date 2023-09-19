@@ -20,8 +20,8 @@ import ai.starwhale.mlops.domain.run.bo.Run;
 import ai.starwhale.mlops.domain.run.bo.RunStatus;
 import ai.starwhale.mlops.schedule.executor.RunExecutor;
 import ai.starwhale.mlops.schedule.impl.container.ContainerCommand;
-import ai.starwhale.mlops.schedule.reporting.run.ReportedRun;
-import ai.starwhale.mlops.schedule.reporting.run.RunReportReceiver;
+import ai.starwhale.mlops.schedule.reporting.ReportedRun;
+import ai.starwhale.mlops.schedule.reporting.RunReportReceiver;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.CreateContainerCmd;
@@ -115,7 +115,7 @@ public class RunExecutorDockerImpl implements RunExecutor {
             @Override
             public void onComplete() {
                 var labels = new HashMap<String, String>();
-                labels.put(ContainerTaskMapper.CONTAINER_LABEL_RUN_ID, run.getId().toString());
+                labels.put(ContainerRunMapper.CONTAINER_LABEL_RUN_ID, run.getId().toString());
                 labels.putAll(CONTAINER_LABELS);
 
                 CreateContainerCmd createContainerCmd = dockerClient.createContainerCmd(image)

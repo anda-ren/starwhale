@@ -22,7 +22,6 @@ import static org.mockito.Mockito.when;
 
 import ai.starwhale.mlops.domain.job.step.bo.Step;
 import ai.starwhale.mlops.domain.task.bo.Task;
-import ai.starwhale.mlops.schedule.impl.docker.ContainerTaskMapper;
 import ai.starwhale.mlops.schedule.impl.docker.DockerClientFinder;
 import ai.starwhale.mlops.schedule.impl.docker.LocalDockerTool;
 import ai.starwhale.mlops.schedule.impl.docker.LocalDockerTool.TempDockerContainer;
@@ -71,7 +70,7 @@ public class RunLogStreamingCollectorDockerTest {
         when(container.getId()).thenReturn(containerName);
 
         when(containerTaskMapper.containerOfTask(task)).thenReturn(container);
-        when(containerTaskMapper.taskIfOfContainer(container)).thenReturn(1L);
+        when(containerTaskMapper.runIdOfContainer(container)).thenReturn(1L);
         logStreamingCollector = new RunLogStreamingCollectorDocker(task, dockerClientFinder, containerTaskMapper);
 
         // sleep for a while to wait for the log collector done,
